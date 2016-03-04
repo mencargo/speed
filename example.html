@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Speedtest</title>
+<script type="text/javascript" src="speedtest.js"></script>
+</head>
+<body>
+<h1>Speedtest</h1>
+<h4>Download</h4>
+<div id="download">Wait...</div>
+<h4>Upload</h4>
+<div id="upload">Wait...</div>
+<h4>Latency</h4>
+<div id="ping">Wait...</div>
+<script type="text/javascript">
+	var tester=new DownloadTester("garbage.php");
+	var d=document.getElementById("download");
+	tester.onUpdate=function(){
+		d.innerHTML=tester.getValue()+" Megabit/s";
+	}
+	tester.onFail=function(){
+		d.innerHTML="Failed";
+		tester.onDone();
+	}
+	tester.onDone=function(){
+		tester=new UploadTester("upload-test");
+		d=document.getElementById("upload");
+		tester.onUpdate=function(){
+			d.innerHTML=tester.getValue()+" Megabit/s";
+		}
+		tester.onFail=function(){
+			d.innerHTML="Failed";
+			tester.onDone();
+		}
+		tester.onDone=function(){
+			tester=new PingTester("empty.dat");
+			d=document.getElementById("ping");
+			tester.onUpdate=function(){
+				d.innerHTML=tester.getValue()+" ms";
+			}
+			tester.onFail=function(){d.innerHTML="Failed";}
+		}
+	}
+</script>
+</body>
+</html>
