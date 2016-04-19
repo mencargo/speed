@@ -13,34 +13,35 @@
 <h4>Latency</h4>
 <div id="ping">Wait...</div>
 <script type="text/javascript">
-	var tester=new DownloadTester("garbage.php");
-	var d=document.getElementById("download");
-	tester.onUpdate=function(){
-		d.innerHTML=tester.getValue()+" Megabit/s";
-	}
-	tester.onFail=function(){
-		d.innerHTML="Failed";
-		tester.onDone();
-	}
-	tester.onDone=function(){
-		tester=new UploadTester("upload-test");
-		d=document.getElementById("upload");
-		tester.onUpdate=function(){
-			d.innerHTML=tester.getValue()+" Megabit/s";
-		}
-		tester.onFail=function(){
-			d.innerHTML="Failed";
-			tester.onDone();
-		}
-		tester.onDone=function(){
-			tester=new PingTester("empty.dat");
-			d=document.getElementById("ping");
-			tester.onUpdate=function(){
-				d.innerHTML=tester.getValue()+" ms";
+	var tester=new DownloadTester("garbage.php",function(){
+		//when the download test is done, start the upload test
+		tester=new UploadTester("upload-test", function(){
+			//when the upload test is done, start the latency test
+			tester=new PingTester("empty.dat",null //when the test ends, do nothing
+			,function(){
+				//called periodically to update latency
+				document.getElementById("ping").innerHTML=tester.getValue()+" ms";
+			},function(){
+				//when the latency test fails
+				document.getElementById("ping").innerHTML="Failed";
 			}
-			tester.onFail=function(){d.innerHTML="Failed";}
-		}
-	}
+			);
+		},function(){
+			//called periodically to update upload speed
+			document.getElementById("upload").innerHTML=tester.getValue()+" Megabit/s";
+		},function(){
+			//when the upload test fails
+			document.getElementById("upload").innerHTML="Failed";
+			tester.onDone();
+		});
+	},function(){
+		//called periodically to update download speed
+		document.getElementById("download").innerHTML=tester.getValue()+" Megabit/s";
+	},function(){
+		//when the download test fails
+		document.getElementById("download").innerHTML="Failed";
+		tester.onDone();
+	});
 </script>
 </body>
 </html>
