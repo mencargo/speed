@@ -77,7 +77,7 @@
                     updateGauge(ggul,   data[2]);
                     updateGauge(ggping, data[3]);
                 }.bind(this);
-                w.postMessage("start");
+                w.postMessage('start {"time_ul":"5", "time_dl":"5", "count_ping":"10", "url_dl":"garbage.php","url_ul":"empty.dat","url_ping":"empty.dat"}');
             }
             function abortTest(){
                 if(w)w.postMessage("abort");

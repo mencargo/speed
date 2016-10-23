@@ -64,10 +64,7 @@
                 ul.innerHTML=data[2];
                 ping.innerHTML=data[3];
             }.bind(this);
-            w.postMessage("set url_dl garbage.php");
-            w.postMessage("set url_ul empty.dat");
-            w.postMessage("set url_ping empty.dat");
-            w.postMessage("start");
+            w.postMessage('start {"url_dl":"garbage.php","url_ul":"empty.dat","url_ping":"empty.dat","time_dl":"10","time_ul":"15","count_ping":"30"}'); //start with custom parameters. paths are relative to js file. you can omit parameters that you don't want to change
         </script>
     </body>
 </html>

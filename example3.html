@@ -50,8 +50,7 @@
                     var data=event.data.split(";");
                     var status=Number(data[0]);
                     var dl=document.getElementById("download"),ul=document.getElementById("upload"),ping=document.getElementById("ping");
-                    // dl.className=status==1?"flash":"";ul.className=status==2?"flash":"";ping.className=status==3?"flash":"";
-
+                    dl.className=status==1?"flash":"";ul.className=status==2?"flash":"";ping.className=status==3?"flash":"";
                     if(status>=4){
                         clearInterval(interval);
                         document.getElementById("abortBtn").style.display="none";
@@ -65,9 +64,6 @@
                     ul.innerHTML=data[2];
                     ping.innerHTML=data[3];
                 }.bind(this);
-                w.postMessage("set time_dl 10");    // Timeout download
-                w.postMessage("set time_ul 20");    // Timeout upload
-                w.postMessage("set count_ping 30"); // Count of pings
                 w.postMessage("start");
             }
             function abortTest(){
