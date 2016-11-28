@@ -1,8 +1,8 @@
-# Speedtest in 4k
+# HTML5 Speedtest
 
 No Flash, No Java, No Websocket, No Bullshit.
 
-This is a very small Speedtest implemented in Javascript, using XMLHttpRequest and Web Workers.
+This is a very lightweight Speedtest implemented in Javascript, using XMLHttpRequest and Web Workers.
 
 ## Try it
 [Take a Speedtest](http://speedtest.adolfintel.com)
@@ -13,9 +13,9 @@ Only modern browsers are supported (Edge 12+)
 ## Requirements
  - A reasonably fast web server
  - Some way to generate garbage data using either the included PHP script, a [big file of random data](http://downloads.adolfintel.com/geth.php?r=speedtest-bigfile), or a symlink to /dev/urandom
- - Your server must not compress the data it sends
  - Your server must accept large POST requests (up to 10 Megabytes), otherwise the upload test will fail
  - Client side, there must not be any type of buffering (such as a proxy), or you may get incorrect results
+ - It's also better if your server does not use compression, but it's not mandatory
 
 ## How to use
 See the examples, it's really simple.

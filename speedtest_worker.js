@@ -1,32 +1,29 @@
 var testStatus=0,dlStatus="",ulStatus="",pingStatus="";
-var settings={time_ul:15, time_dl:15, count_ping:35, url_dl:"garbage.php",url_ul:"empty.dat",url_ping:"empty.dat"};
+var settings={time_ul:15,time_dl:15,count_ping:35,url_dl:"garbage.php",url_ul:"empty.dat",url_ping:"empty.dat"};
 var xhr=null;
 this.addEventListener('message', function(e){
 	var params=e.data.split(" ");
 	if(params[0]=="status"){
 		postMessage(testStatus+";"+dlStatus+";"+ulStatus+";"+pingStatus);
 	}
-	if(params[0]=="start"){
-		if(testStatus==0){
-			testStatus=1;
-			try{
-				var s=JSON.parse(e.data.substring(5));
-				if(typeof s.url_dl != "undefined") settings.url_dl=s.url_dl;
-				if(typeof s.url_ul != "undefined") settings.url_ul=s.url_ul;
-				if(typeof s.url_ping != "undefined") settings.url_ping=s.url_ping;
-				if(typeof s.time_dl != "undefined") settings.time_dl=s.time_dl;
-				if(typeof s.time_ul != "undefined") settings.time_ul=s.time_ul;
-				if(typeof s.count_ping != "undefined") settings.count_ping=s.count_ping;
-			}catch(e){}
-			dlTest(function(){testStatus=2;ulTest(function(){testStatus=3;pingTest(function(){testStatus=4;});});});
-		}
+	if(params[0]=="start"&&testStatus==0){
+		testStatus=1;
+		try{
+			var s=JSON.parse(e.data.substring(5));
+			if(typeof s.url_dl != "undefined") settings.url_dl=s.url_dl;
+			if(typeof s.url_ul != "undefined") settings.url_ul=s.url_ul;
+			if(typeof s.url_ping != "undefined") settings.url_ping=s.url_ping;
+			if(typeof s.time_dl != "undefined") settings.time_dl=s.time_dl;
+			if(typeof s.time_ul != "undefined") settings.time_ul=s.time_ul;
+			if(typeof s.count_ping != "undefined") settings.count_ping=s.count_ping;
+		}catch(e){}
+		dlTest(function(){testStatus=2;ulTest(function(){testStatus=3;pingTest(function(){testStatus=4;});});});
 	}
 	if(params[0]=="abort"){
 		try{if(xhr)xhr.abort();}catch(e){}
 		testStatus=5;dlStatus="";ulStatus="";pingStatus="";
 	}
 });
-
 function dlTest(done){
     var firstTick=true,startT=new Date().getTime(), prevT=new Date().getTime(),prevLoaded=0,speed=0.0;
     xhr=new XMLHttpRequest();
@@ -54,10 +51,9 @@ function dlTest(done){
         xhr=null;
         done();
     }.bind(this);
-    xhr.open("GET", settings.url_dl+"?r="+Math.random(),true);
+    xhr.open("GET",settings.url_dl+"?r="+Math.random(),true);
     xhr.send();
 }
-
 function ulTest(done){
     var firstTick=true,startT=new Date().getTime(), prevT=new Date().getTime(),prevLoaded=0,speed=0.0;
     xhr=new XMLHttpRequest();
@@ -82,10 +78,12 @@ function ulTest(done){
         ulStatus="Fail";
         done();
     }.bind(this);
-    xhr.open("POST", settings.url_ul+"?r="+Math.random(),true);
-    xhr.send(new ArrayBuffer(10485760));
+    xhr.open("POST",settings.url_ul+"?r="+Math.random(),true);
+	xhr.setRequestHeader('Content-Encoding','identity');
+	var r=new ArrayBuffer(10485760);
+	try{var w=new Float32Array(r);for(var i=0;i<w.length;i++)w[i]=Math.random();}catch(e){}
+    xhr.send(r);
 }
-
 function pingTest(done){
     var prevT=null,ping=0.0,i=0;
     var doPing=function(){
