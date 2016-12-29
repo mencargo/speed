@@ -15,7 +15,7 @@ header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
 // Generate data
-$data=openssl_random_pseudo_bytes(1048576,false);
+$data=openssl_random_pseudo_bytes(1048576);
 // Deliver chunks of 1048576 bytes
 while(1){
     echo $data;
