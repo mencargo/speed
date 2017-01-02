@@ -28,7 +28,7 @@ function dlTest(done){
     var firstTick=true,startT=new Date().getTime(), prevT=new Date().getTime(),prevLoaded=0,speed=0.0;
     xhr=new XMLHttpRequest();
     xhr.onprogress=function(event){
-        var instspd=(event.loaded-prevLoaded)/((new Date().getTime()-prevT)/1000.0);
+        var instspd=event.loaded<=0?prevLoaded:((event.loaded-prevLoaded)/((new Date().getTime()-prevT)/1000.0));
         if(isNaN(instspd)||!isFinite(instspd)) return;
         if(firstTick){
             speed=instspd;
@@ -42,9 +42,9 @@ function dlTest(done){
         if(((prevT-startT)/1000.0)>settings.time_dl){try{xhr.abort();}catch(e){} xhr=null; done();}
     }.bind(this);
     xhr.onload=function(){
-        dlStatus=((speed*8)/1048576.0).toFixed(2);
-        xhr=null;
-        done();
+		prevT=new Date().getTime(); prevLoaded=0; fistTick=true;
+        xhr.open("GET",settings.url_dl+"?r="+Math.random(),true);
+		xhr.send();
     }.bind(this);
     xhr.onerror=function(){
         dlStatus="Fail";
@@ -58,12 +58,12 @@ function ulTest(done){
     var firstTick=true,startT=new Date().getTime(), prevT=new Date().getTime(),prevLoaded=0,speed=0.0;
     xhr=new XMLHttpRequest();
     xhr.upload.onprogress=function(event){
-        var instspd=(event.loaded-prevLoaded)/((new Date().getTime()-prevT)/1000.0);
+        var instspd=event.loaded<=0?prevLoaded:((event.loaded-prevLoaded)/((new Date().getTime()-prevT)/1000.0));
         if(isNaN(instspd)||!isFinite(instspd)) return;
         if(firstTick){
             firstTick=false;
         }else{
-            speed=speed*0.7+instspd*0.3;
+            speed=instspd<speed?(speed*0.4+instspd*0.6):(speed*0.8+instspd*0.2);
         }
         prevLoaded=event.loaded;
         prevT=new Date().getTime();
@@ -71,11 +71,13 @@ function ulTest(done){
         if(((prevT-startT)/1000.0)>settings.time_ul){try{xhr.abort();}catch(e){} xhr=null; done();}
     }.bind(this);
     xhr.onload=function(){
-        ulStatus=((speed*8)/1048576.0).toFixed(2);
-        done();
+		prevT=new Date().getTime(); prevLoaded=0; fistTick=true;
+        xhr.open("POST",settings.url_ul+"?r="+Math.random(),true);
+		xhr.send(r);
     }.bind(this);
     xhr.onerror=function(){
         ulStatus="Fail";
+		xhr=null;
         done();
     }.bind(this);
     xhr.open("POST",settings.url_ul+"?r="+Math.random(),true);
