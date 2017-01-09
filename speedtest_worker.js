@@ -58,7 +58,7 @@ function ulTest(done){
     var firstTick=true,startT=new Date().getTime(), prevT=new Date().getTime(),prevLoaded=0,speed=0.0;
     xhr=new XMLHttpRequest();
     xhr.upload.onprogress=function(event){
-        var instspd=event.loaded<=0?prevLoaded:((event.loaded-prevLoaded)/((new Date().getTime()-prevT)/1000.0));
+        var instspd=event.loaded<=0?speed:((event.loaded-prevLoaded)/((new Date().getTime()-prevT)/1000.0));
         if(isNaN(instspd)||!isFinite(instspd)) return;
         if(firstTick){
             firstTick=false;
