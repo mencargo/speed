@@ -82,9 +82,12 @@ function ulTest(done){
     }.bind(this);
     xhr.open("POST",settings.url_ul+"?r="+Math.random(),true);
 	xhr.setRequestHeader('Content-Encoding','identity');
-	var r=new ArrayBuffer(10485760);
-	try{var w=new Float32Array(r);for(var i=0;i<w.length;i++)w[i]=Math.random();}catch(e){}
-    xhr.send(r);
+	var r=new ArrayBuffer(1048576);
+	try{r=new Float32Array(r);for(var i=0;i<r.length;i++)r[i]=Math.random();}catch(e){}
+	var req=[];
+	for(var i=0;i<20;i++) req.push(r);
+	req=new Blob(req);
+    xhr.send(req);
 }
 function pingTest(done){
     var prevT=null,ping=0.0,i=0;
