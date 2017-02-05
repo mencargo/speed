@@ -24,12 +24,14 @@ this.addEventListener('message', function(e){
 		testStatus=5;dlStatus="";ulStatus="";pingStatus="";
 	}
 });
+var dlCalled=false;
 function dlTest(done){
+	if(dlCalled) return; else dlCalled=true;
     var firstTick=true,startT=new Date().getTime(), prevT=new Date().getTime(),prevLoaded=0,speed=0.0;
     xhr=new XMLHttpRequest();
     xhr.onprogress=function(event){
-        var instspd=event.loaded<=0?speed:((event.loaded-prevLoaded)/((new Date().getTime()-prevT)/1000.0));
-        if(isNaN(instspd)||!isFinite(instspd)) return;
+        var instspd=event.loaded<=0?speed:((event.loaded-prevLoaded)/((new Date().getTime()-prevT)/1000.0))*1.25;
+        if(isNaN(instspd)||!isFinite(instspd)||instspd<0) return;
         if(firstTick){
             speed=instspd;
             firstTick=false;
@@ -48,18 +50,21 @@ function dlTest(done){
     }.bind(this);
     xhr.onerror=function(){
         dlStatus="Fail";
+		try{xhr.abort();}catch(e){}
         xhr=null;
         done();
     }.bind(this);
     xhr.open("GET",settings.url_dl+"?r="+Math.random(),true);
     xhr.send();
 }
+var ulCalled=false;
 function ulTest(done){
+	if(ulCalled) return; else ulCalled=true;
     var firstTick=true,startT=new Date().getTime(), prevT=new Date().getTime(),prevLoaded=0,speed=0.0;
     xhr=new XMLHttpRequest();
     xhr.upload.onprogress=function(event){
-        var instspd=event.loaded<=0?speed:((event.loaded-prevLoaded)/((new Date().getTime()-prevT)/1000.0));
-        if(isNaN(instspd)||!isFinite(instspd)) return;
+        var instspd=event.loaded<=0?speed:((event.loaded-prevLoaded)/((new Date().getTime()-prevT)/1000.0))*1.25;
+        if(isNaN(instspd)||!isFinite(instspd)||instspd<0) return;
         if(firstTick){
             firstTick=false;
         }else{
@@ -70,13 +75,14 @@ function ulTest(done){
         ulStatus=((speed*8)/1048576.0).toFixed(2);
         if(((prevT-startT)/1000.0)>settings.time_ul){try{xhr.abort();}catch(e){} xhr=null; done();}
     }.bind(this);
-    xhr.onload=function(){
+    xhr.upload.onload=function(){
 		prevT=new Date().getTime(); prevLoaded=0; fistTick=true;
         xhr.open("POST",settings.url_ul+"?r="+Math.random(),true);
 		xhr.send(r);
     }.bind(this);
-    xhr.onerror=function(){
+    xhr.upload.onerror=function(){
         ulStatus="Fail";
+		try{xhr.abort();}catch(e){}
 		xhr=null;
         done();
     }.bind(this);
@@ -89,7 +95,9 @@ function ulTest(done){
 	req=new Blob(req);
     xhr.send(req);
 }
+var ptCalled=false;
 function pingTest(done){
+	if(ptCalled) return; else ptCalled=true;
     var prevT=null,ping=0.0,i=0;
     var doPing=function(){
         prevT=new Date().getTime();
@@ -98,7 +106,7 @@ function pingTest(done){
             if(i==0){
                 prevT=new Date().getTime();
             }else{
-                var instspd=new Date().getTime()-prevT;
+                var instspd=(new Date().getTime()-prevT)/2;
                 if(i==1)ping=instspd; else ping=ping*0.9+instspd*0.1;
             }
             pingStatus=ping.toFixed(2);
