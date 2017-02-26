@@ -37,6 +37,10 @@
                 color:#000000;
                 text-decoration:none;
             }
+			#ip{
+				margin:0.8em 0;
+				font-size:1.2em;
+			}
         </style>
         <script type="text/javascript">
             var w=null;
@@ -49,7 +53,7 @@
                 w.onmessage=function(event){
                     var data=event.data.split(";");
                     var status=Number(data[0]);
-                    var dl=document.getElementById("download"),ul=document.getElementById("upload"),ping=document.getElementById("ping");
+                    var dl=document.getElementById("download"),ul=document.getElementById("upload"),ping=document.getElementById("ping"),ip=document.getElementById("ip");
                     dl.className=status==1?"flash":"";ul.className=status==2?"flash":"";ping.className=status==3?"flash":"";
                     if(status>=4){
                         clearInterval(interval);
@@ -63,6 +67,7 @@
                     dl.innerHTML=data[1];
                     ul.innerHTML=data[2];
                     ping.innerHTML=data[3];
+					ip.innerHTML=data[4];
                 }.bind(this);
                 w.postMessage("start");
             }
@@ -74,6 +79,7 @@
     <body>
         <h1>Speedtest</h1>
         <div id="testArea" style="display:none">
+			<div id="ip">Please wait...</div>
             <div class="test">
                 <div class="testName">Download</div>
                 <div class="meter">&nbsp;<span id="download"></span>&nbsp;</div>

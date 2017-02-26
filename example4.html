@@ -52,6 +52,11 @@
                 font-weight: 700;
                 font-family: 'Roboto';
             }    
+			
+			#ip{
+				margin:1em 0;
+				font-size:1.2em;
+			}
 
         </style>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.1.4/raphael-min.js"></script>
@@ -76,8 +81,9 @@
                     updateGauge(ggdl,   data[1]);
                     updateGauge(ggul,   data[2]);
                     updateGauge(ggping, data[3]);
+					document.getElementById("ip").innerHTML="Your IP: "+data[4];
                 }.bind(this);
-                w.postMessage('start {"time_ul":"10", "time_dl":"10", "count_ping":"20", "url_dl":"garbage.php","url_ul":"empty.dat","url_ping":"empty.dat"}');
+                w.postMessage('start {"time_ul":"10", "time_dl":"10", "count_ping":"20", "url_dl":"garbage.php","url_ul":"empty.dat","url_ping":"empty.dat","url_getIp":"getIP.php"}');
             }
             function abortTest(){
                 if(w)w.postMessage("abort");
@@ -161,6 +167,7 @@
             <div class="meter" id="ggul"></div>
             <div class="meter" id="ggping"></div>
         </div>
+		<div id="ip"></div>
         <div>
             <a href="javascript:runTest()"   id="startBtn" class="button">Start</a>
             <a href="javascript:abortTest()" id="abortBtn" class="button" style="display:none;">Abort</a>

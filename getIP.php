@@ -1,4 +1,3 @@
 <?php
-$ip = $_SERVER['REMOTE_ADDR'];
-echo "getIP({\"ip\":\"$ip\"});";
+echo $_SERVER['REMOTE_ADDR'];
 ?>

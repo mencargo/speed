@@ -1,10 +1,10 @@
-var testStatus=0,dlStatus="",ulStatus="",pingStatus="";
-var settings={time_ul:15,time_dl:15,count_ping:35,url_dl:"garbage.php",url_ul:"empty.dat",url_ping:"empty.dat"};
+var testStatus=0,dlStatus="",ulStatus="",pingStatus="",clientIp="";
+var settings={time_ul:15,time_dl:15,count_ping:35,url_dl:"garbage.php",url_ul:"empty.dat",url_ping:"empty.dat",url_getIp:"getIP.php"};
 var xhr=null;
 this.addEventListener('message', function(e){
 	var params=e.data.split(" ");
 	if(params[0]=="status"){
-		postMessage(testStatus+";"+dlStatus+";"+ulStatus+";"+pingStatus);
+		postMessage(testStatus+";"+dlStatus+";"+ulStatus+";"+pingStatus+";"+clientIp);
 	}
 	if(params[0]=="start"&&testStatus==0){
 		testStatus=1;
@@ -13,17 +13,30 @@ this.addEventListener('message', function(e){
 			if(typeof s.url_dl != "undefined") settings.url_dl=s.url_dl;
 			if(typeof s.url_ul != "undefined") settings.url_ul=s.url_ul;
 			if(typeof s.url_ping != "undefined") settings.url_ping=s.url_ping;
+			if(typeof s.url_getIp != "undefined") settings.url_getIp=s.url_getIp;
 			if(typeof s.time_dl != "undefined") settings.time_dl=s.time_dl;
 			if(typeof s.time_ul != "undefined") settings.time_ul=s.time_ul;
 			if(typeof s.count_ping != "undefined") settings.count_ping=s.count_ping;
 		}catch(e){}
-		dlTest(function(){testStatus=2;ulTest(function(){testStatus=3;pingTest(function(){testStatus=4;});});});
+		getIp(function(){dlTest(function(){testStatus=2;ulTest(function(){testStatus=3;pingTest(function(){testStatus=4;});});})});
 	}
 	if(params[0]=="abort"){
 		try{if(xhr)xhr.abort();}catch(e){}
 		testStatus=5;dlStatus="";ulStatus="";pingStatus="";
 	}
 });
+function getIp(done){
+	xhr=new XMLHttpRequest();
+	xhr.onload=function(){
+		clientIp=xhr.responseText;
+		done();
+	}
+	xhr.onerror=function(){
+		done();
+	}
+	xhr.open("GET",settings.url_getIp+"?r="+Math.random(),true);
+	xhr.send();
+}
 var dlCalled=false;
 function dlTest(done){
 	if(dlCalled) return; else dlCalled=true;
