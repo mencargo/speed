@@ -41,7 +41,7 @@ function dlTest(done){
         prevLoaded=event.loaded;
         prevT=new Date().getTime();
         dlStatus=((speed*8)/1048576.0).toFixed(2);
-        if(((prevT-startT)/1000.0)>settings.time_dl){try{xhr.abort();}catch(e){} xhr=null; done();}
+        if(((prevT-startT)/1000.0)>settings.time_dl){xhr.onprogress=null; xhr.onload=null; xhr.onerror=null; try{xhr.abort();}catch(e){} xhr=null; done();}
     }.bind(this);
     xhr.onload=function(){
 		prevT=new Date().getTime(); prevLoaded=0; fistTick=true;
@@ -73,7 +73,7 @@ function ulTest(done){
         prevLoaded=event.loaded;
         prevT=new Date().getTime();
         ulStatus=((speed*8)/1048576.0).toFixed(2);
-        if(((prevT-startT)/1000.0)>settings.time_ul){try{xhr.abort();}catch(e){} xhr=null; done();}
+        if(((prevT-startT)/1000.0)>settings.time_ul){xhr.upload.onprogress=null; xhr.upload.onload=null; xhr.upload.onerror=null; try{xhr.abort();}catch(e){} xhr=null; done();}
     }.bind(this);
     xhr.upload.onload=function(){
 		prevT=new Date().getTime(); prevLoaded=0; fistTick=true;
