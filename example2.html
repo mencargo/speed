@@ -11,7 +11,7 @@
             }
             div.test{
                 display:inline-block;
-                width:30vw;
+                margin:1em;
                 text-align:center;
             }
             div.testName,div.meterUnit{
@@ -49,21 +49,27 @@
             <div class="meter">&nbsp;<span id="ping"></span>&nbsp;</div>
             <div class="meterUnit">ms</div>
         </div>
+		<div class="test">
+            <div class="testName">Jitter</div>
+            <div class="meter">&nbsp;<span id="jitter"></span>&nbsp;</div>
+            <div class="meterUnit">ms</div>
+        </div>
 		<div id="ip"></div>
         <script type="text/javascript">
-            var w=new Worker("speedtest_worker.js");
+            var w=new Worker("speedtest_worker.min.js");
             var interval=setInterval(function(){w.postMessage("status");}.bind(this),100);
             w.onmessage=function(event){
                 var data=event.data.split(";");
                 var status=Number(data[0]);
-                var dl=document.getElementById("download"),ul=document.getElementById("upload"),ping=document.getElementById("ping"),ip=document.getElementById("ip");
-                dl.className=status==1?"flash":"";ul.className=status==2?"flash":"";ping.className=status==3?"flash":"";
+                var dl=document.getElementById("download"),ul=document.getElementById("upload"),ping=document.getElementById("ping"),ip=document.getElementById("ip"),jitter=document.getElementById("jitter");
+                dl.className=status==1?"flash":"";ping.className=status==2?"flash":"";jitter.className=ul.className=status==3?"flash":"";
                 if(status>=4){
                     clearInterval(interval);
                 }
                 dl.innerHTML=data[1];
                 ul.innerHTML=data[2];
                 ping.innerHTML=data[3];
+				jitter.innerHTML=data[5];
 				ip.innerHTML="Your IP: "+data[4];
             }.bind(this);
             w.postMessage('start {"url_dl":"garbage.php","url_ul":"empty.dat","url_ping":"empty.dat","time_dl":"10","time_ul":"15","count_ping":"30"}'); //start with custom parameters. paths are relative to js file. you can omit parameters that you don't want to change

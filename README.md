@@ -11,14 +11,13 @@ This is a very lightweight Speedtest implemented in Javascript, using XMLHttpReq
 Only modern browsers are supported (Edge 12+)
 
 ## Requirements
- - A reasonably fast web server
- - Some way to generate garbage data using either the included PHP script, a [big file of random data](http://downloads.fdossena.com/geth.php?r=speedtest-bigfile), or a symlink to /dev/urandom
- - Your server must accept large POST requests (up to 10 Megabytes), otherwise the upload test will fail
- - Client side, there must not be any type of buffering (such as a proxy), or you may get incorrect results
+ - A reasonably fast web server. PHP is optional but recommended (see doc.pdf for details)
+ - Some way to generate garbage data (PHP script included, see doc.pdf for other solutions)
+ - Your server must accept large POST requests (up to 20 Megabytes), otherwise the upload test will fail
  - It's also better if your server does not use compression, but it's not mandatory
 
 ## How to use
-See the examples, it's really simple.
+See the examples or doc.pdf
 
 ## License
 Copyright (C) 2016-2017 Federico Dossena

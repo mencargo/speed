@@ -17,7 +17,7 @@ header("Pragma: no-cache");
 // Generate data
 $data=openssl_random_pseudo_bytes(1048576);
 // Deliver chunks of 1048576 bytes
-for($i=0;$i<100;$i++){
+for($i=0;$i<intval($_GET["ckSize"]);$i++){
     echo $data;
     flush();
 }

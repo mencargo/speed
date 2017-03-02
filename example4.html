@@ -65,7 +65,7 @@
             var w=null;
             var ggdl,ggul,ggping;
             function runTest(){
-                w=new Worker("speedtest_worker.js");
+                w=new Worker("speedtest_worker.min.js");
                 var interval=setInterval(function(){w.postMessage("status");}.bind(this),100);
                 document.getElementById("abortBtn").style.display="";
                 document.getElementById("startBtn").style.display="none";
@@ -82,8 +82,9 @@
                     updateGauge(ggul,   data[2]);
                     updateGauge(ggping, data[3]);
 					document.getElementById("ip").innerHTML="Your IP: "+data[4];
+					updateGauge(ggjitter, data[5]);
                 }.bind(this);
-                w.postMessage('start {"time_ul":"10", "time_dl":"10", "count_ping":"20", "url_dl":"garbage.php","url_ul":"empty.dat","url_ping":"empty.dat","url_getIp":"getIP.php"}');
+                w.postMessage('start {"time_ul":"10", "time_dl":"10", "count_ping":"50", "url_dl":"garbage.php","url_ul":"empty.dat","url_ping":"empty.dat","url_getIp":"getIP.php"}');
             }
             function abortTest(){
                 if(w)w.postMessage("abort");
@@ -138,7 +139,7 @@
                     refreshAnimationTime: 300, 
                     value: 0,
                     min: 0,
-                    max: 10,
+                    max: 100,
                     decimals : 2,
                     formatNumber: true,                    
                     humanFriendly : false,  
@@ -146,7 +147,24 @@
                         "#999999",
                         "#993333"
                     ]
-
+                });
+				ggjitter = new JustGage({
+                    id: 'ggjitter',
+                    title: "Jitter",
+                    label: "ms",
+                    titleFontFamily : "Open Sans",
+                    valueFontFamily : "Open Sans",
+                    refreshAnimationTime: 300, 
+                    value: 0,
+                    min: 0,
+                    max: 100,
+                    decimals : 2,
+                    formatNumber: true,                    
+                    humanFriendly : false,  
+                    levelColors: [
+                        "#999999",
+                        "#993333"
+                    ]
                 });
             });
 
@@ -166,6 +184,7 @@
             <div class="meter" id="ggdl"></div>
             <div class="meter" id="ggul"></div>
             <div class="meter" id="ggping"></div>
+			<div class="meter" id="ggjitter"></div>
         </div>
 		<div id="ip"></div>
         <div>
