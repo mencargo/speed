@@ -98,7 +98,7 @@ this.addEventListener('message', function(e){
 			if(typeof s.garbagePhp_chunkSize != "undefined") settings.garbagePhp_chunkSize=s.garbagePhp_chunkSize; //size of garbage.php chunks
 			if(typeof s.force_fetchAPI != "undefined") settings.force_fetchAPI=s.force_fetchAPI; //use fetch api on all browsers that support it if enabled
 			if(settings.allow_fetchAPI&&settings.force_fetchAPI&&(!!self.fetch)) useFetchAPI=true;
-		}catch(e){console.log(e)}
+		}catch(e){}
 		//run the tests
 		console.log(settings);
 		console.log("Fetch API: "+useFetchAPI);
@@ -185,7 +185,7 @@ function dlTest(done){
 					delete(xhr[i]);
 				}.bind(this);
 				//send xhr
-				if(settings.xhr_dlUseBlob) xhr[i].responseType='blob'; else xhr[i].responseType='arraybuffer';
+				try{if(settings.xhr_dlUseBlob) xhr[i].responseType='blob'; else xhr[i].responseType='arraybuffer';}catch(e){}
 				xhr[i].open("GET",settings.url_dl+"?r="+Math.random()+"&ckSize="+settings.garbagePhp_chunkSize,true); //random string to prevent caching
 				xhr[i].send();
 			}
