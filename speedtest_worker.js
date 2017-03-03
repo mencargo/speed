@@ -176,6 +176,7 @@ function dlTest(done){
 				}.bind(this);
 				xhr[i].onload=function(){
 					//the large file has been loaded entirely, start again
+                    xhr[i].abort();// reset the stream data to empty ram
 					testStream(i,0);
 				}.bind(this);
 				xhr[i].onerror=function(){
