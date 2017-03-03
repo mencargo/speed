@@ -1,5 +1,5 @@
 /*
-	HTML5 Speedtest v4.0
+	HTML5 Speedtest v4.1
 	by Federico Dossena
 	https://github.com/adolfintel/speedtest/
 	GNU LGPLv3 License
@@ -144,9 +144,9 @@ function dlTest(done){
 		startT=new Date().getTime(), //timestamp when test was started
 		failed=false; //set to true if a stream fails
 	xhr=[]; 
-	//function to create a download stream
+	//function to create a download stream. streams are slightly delayed so that they will not end at the same time
 	var testStream=function(i,delay){
-		setTimeout(function(){ //delay creation of a stream slightly so that the new stream is completely detached from the one that created it
+		setTimeout(function(){
 			if(testStatus!=1) return; //delayed stream ended up starting after the end of the download test
 			if(useFetchAPI){
 				xhr[i]=fetch(settings.url_dl+"?r="+Math.random()+"&ckSize="+settings.garbagePhp_chunkSize).then(function(response) {
@@ -176,7 +176,7 @@ function dlTest(done){
 				}.bind(this);
 				xhr[i].onload=function(){
 					//the large file has been loaded entirely, start again
-                    xhr[i].abort();// reset the stream data to empty ram
+                    try{xhr[i].abort();}catch(e){} //reset the stream data to empty ram
 					testStream(i,0);
 				}.bind(this);
 				xhr[i].onerror=function(){
@@ -224,9 +224,9 @@ function ulTest(done){
 		startT=new Date().getTime(), //timestamp when test was started
 		failed=false; //set to true if a stream fails
 	xhr=[];
-	//function to create an upload stream
+	//function to create an upload stream. streams are slightly delayed so that they will not end at the same time
 	var testStream=function(i,delay){
-		setTimeout(function(){ //delay creation of a stream slightly so that the new stream is completely detached from the one that created it
+		setTimeout(function(){
 			if(testStatus!=3) return; //delayed stream ended up starting after the end of the upload test
 			var prevLoaded=0; //number of bytes transmitted last time onprogress was called
 			var x=new XMLHttpRequest();
