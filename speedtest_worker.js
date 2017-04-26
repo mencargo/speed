@@ -211,12 +211,16 @@ function dlTest(done){
 	}.bind(this),200);
 }
 //upload test, calls done function whent it's over
-//garbage data for upload test (1mb of random bytes repeated 20 times, for a total of 20mb)
+//garbage data for upload test
 var r=new ArrayBuffer(1048576);
 try{r=new Float32Array(r);for(var i=0;i<r.length;i++)r[i]=Math.random();}catch(e){}
-var req=[];
+var req=[],reqsmall=[];
 for(var i=0;i<20;i++) req.push(r);
 req=new Blob(req);
+r=new ArrayBuffer(262144);
+try{r=new Float32Array(r);for(var i=0;i<r.length;i++)r[i]=Math.random();}catch(e){}
+reqsmall.push(r);
+reqsmall=new Blob(reqsmall);
 var ulCalled=false; //used to prevent multiple accidental calls to ulTest
 function ulTest(done){
 	if(ulCalled) return; else ulCalled=true; //ulTest already called?
@@ -231,28 +235,53 @@ function ulTest(done){
 			var prevLoaded=0; //number of bytes transmitted last time onprogress was called
 			var x=new XMLHttpRequest();
 			xhr[i]=x;
-			xhr[i].upload.onprogress=function(event){
-				if(testStatus!=3){try{x.abort();}catch(e){}} //just in case this XHR is still running after the upload test
-				//progress event, add number of new loaded bytes to totLoaded
-				var loadDiff=event.loaded<=0?0:(event.loaded-prevLoaded);
-				if(isNaN(loadDiff)||!isFinite(loadDiff)||loadDiff<0) return; //just in case
-				totLoaded+=loadDiff;
-				prevLoaded=event.loaded;
-			}.bind(this);
-			xhr[i].upload.onload=function(){
-				//this stream sent all 20mb of garbage data, start again
-				testStream(i,0);
-			}.bind(this);
-			xhr[i].upload.onerror=function(){
-				//error, abort
-				failed=true;
-				try{xhr[i].abort();}catch(e){}
-				delete(xhr[i]);
-			}.bind(this);
-			//send xhr
-			xhr[i].open("POST",settings.url_ul+"?r="+Math.random(),true); //random string to prevent caching
-			xhr[i].setRequestHeader('Content-Encoding','identity'); //disable compression (some browsers may refuse it, but data is incompressible anyway)
-			xhr[i].send(req);
+			var ie11workaround;
+			try{
+				xhr[i].upload.onprogress;
+				ie11workaround=false;
+			}catch(e){
+				ie11workaround=true;
+			}
+			if(ie11workaround){
+				//IE11 workarond: xhr.upload does not work properly, therefore we send a bunch of small 256k requests and use the onload event as progress. This is not precise, especially on fast connections
+				xhr[i].onload=function(){
+					totLoaded+=262144;
+					testStream(i,0);
+				}
+				xhr[i].onerror=function(){
+					//error, abort
+					failed=true;
+					try{xhr[i].abort();}catch(e){}
+					delete(xhr[i]);
+				}
+				xhr[i].open("POST",settings.url_ul+"?r="+Math.random(),true); //random string to prevent caching
+				xhr[i].setRequestHeader('Content-Encoding','identity'); //disable compression (some browsers may refuse it, but data is incompressible anyway)
+				xhr[i].send(reqsmall);
+			}else{
+				//REGULAR version, no workaround
+				xhr[i].upload.onprogress=function(event){
+					if(testStatus!=3){try{x.abort();}catch(e){}} //just in case this XHR is still running after the upload test
+					//progress event, add number of new loaded bytes to totLoaded
+					var loadDiff=event.loaded<=0?0:(event.loaded-prevLoaded);
+					if(isNaN(loadDiff)||!isFinite(loadDiff)||loadDiff<0) return; //just in case
+					totLoaded+=loadDiff;
+					prevLoaded=event.loaded;
+				}.bind(this);
+				xhr[i].upload.onload=function(){
+					//this stream sent all the garbage data, start again
+					testStream(i,0);
+				}.bind(this);
+				xhr[i].upload.onerror=function(){
+					//error, abort
+					failed=true;
+					try{xhr[i].abort();}catch(e){}
+					delete(xhr[i]);
+				}.bind(this);
+				//send xhr
+				xhr[i].open("POST",settings.url_ul+"?r="+Math.random(),true); //random string to prevent caching
+				xhr[i].setRequestHeader('Content-Encoding','identity'); //disable compression (some browsers may refuse it, but data is incompressible anyway)
+				xhr[i].send(req);
+			}
 		}.bind(this),1);
 	}.bind(this);
 	//open streams

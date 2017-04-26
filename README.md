@@ -8,7 +8,7 @@ This is a very lightweight Speedtest implemented in Javascript, using XMLHttpReq
 [Take a Speedtest](http://speedtest.fdossena.com)
 
 ## Compatibility
-Only modern browsers are supported (Edge 12+)
+Only modern browsers are supported (IE11, latest Edge, latest Chrome, latest Firefox, latest Safari)
 
 ## Requirements
  - A reasonably fast web server. PHP is optional but recommended (see doc.pdf for details)
