@@ -17,7 +17,7 @@ Only modern browsers are supported (IE11, latest Edge, latest Chrome, latest Fir
  - It's also better if your server does not use compression, but it's not mandatory
 
 ## How to use
-See the examples or doc.pdf
+See the examples or doc.md
 
 ## License
 Copyright (C) 2016-2017 Federico Dossena
