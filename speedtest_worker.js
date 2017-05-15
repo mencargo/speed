@@ -1,5 +1,5 @@
 /*
-	HTML5 Speedtest v4.1
+	HTML5 Speedtest v4.2.1
 	by Federico Dossena
 	https://github.com/adolfintel/speedtest/
 	GNU LGPLv3 License
@@ -19,8 +19,8 @@ var settings = {
   time_dl: 15, // duration of download test in seconds
   count_ping: 35, // number of pings to perform in ping test
   url_dl: 'garbage.php', // path to a large file or garbage.php, used for download test. must be relative to this js file
-  url_ul: 'empty.dat', // path to an empty file, used for upload test. must be relative to this js file
-  url_ping: 'empty.dat', // path to an empty file, used for ping test. must be relative to this js file
+  url_ul: 'empty.php', // path to an empty file, used for upload test. must be relative to this js file
+  url_ping: 'empty.php', // path to an empty file, used for ping test. must be relative to this js file
   url_getIp: 'getIP.php', // path to getIP.php relative to this js file, or a similar thing that outputs the client's ip
   xhr_dlMultistream: 10, // number of download streams to use (can be different if enable_quirks is active)
   xhr_ulMultistream: 3, // number of upload streams to use (can be different if enable_quirks is active)

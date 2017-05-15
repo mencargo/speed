@@ -85,7 +85,7 @@
                 document.getElementById('ip').textContent = 'Your IP: ' + data[4]
                 updateGauge(ggjitter, data[5])
             }
-            w.postMessage('start {"time_ul": "10", "time_dl": "10", "count_ping": "50", "url_dl": "garbage.php", "url_ul": "empty.dat", "url_ping": "empty.dat", "url_getIp": "getIP.php"}')
+            w.postMessage('start {"time_ul": "10", "time_dl": "10", "count_ping": "50", "url_dl": "garbage.php", "url_ul": "empty.php", "url_ping": "empty.php", "url_getIp": "getIP.php"}')
         }
         function abortTest() {
             if (w) w.postMessage('abort')
