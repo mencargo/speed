@@ -1,5 +1,5 @@
 /*
-	HTML5 Speedtest v4.2.1
+	HTML5 Speedtest v4.2.2
 	by Federico Dossena
 	https://github.com/adolfintel/speedtest/
 	GNU LGPLv3 License
@@ -24,6 +24,7 @@ var settings = {
   url_getIp: 'getIP.php', // path to getIP.php relative to this js file, or a similar thing that outputs the client's ip
   xhr_dlMultistream: 10, // number of download streams to use (can be different if enable_quirks is active)
   xhr_ulMultistream: 3, // number of upload streams to use (can be different if enable_quirks is active)
+  xhr_ignoreErrors: 1, // 0=fail on errors, 1=attempt to restart a stream if it fails, 2=ignore all errors
   xhr_dlUseBlob: false, // if set to true, it reduces ram usage but uses the hard drive (useful with large garbagePhp_chunkSize and/or high xhr_dlMultistream)
   garbagePhp_chunkSize: 20, // size of chunks sent by garbage.php (can be different if enable_quirks is active)
   enable_quirks: true, // enable quirks for specific browsers. currently it overrides settings to optimize for specific browsers, unless they are already being overridden with the start command
@@ -180,10 +181,11 @@ function dlTest (done) {
           testStream(i, 0)
         }.bind(this)
         xhr[i].onerror = function () {
-          // error, abort
-          failed = true
+          // error
+          if (settings.xhr_ignoreErrors === 0) failed=true //abort
           try { xhr[i].abort() } catch (e) { }
           delete (xhr[i])
+          if (settings.xhr_ignoreErrors === 1) testStream(i, 100) //restart stream after 100ms
         }.bind(this)
         // send xhr
         try { if (settings.xhr_dlUseBlob) xhr[i].responseType = 'blob'; else xhr[i].responseType = 'arraybuffer' } catch (e) { }
@@ -251,9 +253,10 @@ function ulTest (done) {
         }
         xhr[i].onerror = function () {
           // error, abort
-          failed = true
+          if (settings.xhr_ignoreErrors === 0) failed = true //abort
           try { xhr[i].abort() } catch (e) { }
           delete (xhr[i])
+          if (settings.xhr_ignoreErrors === 1) testStatus(i,100); //restart stream after 100ms
         }
         xhr[i].open('POST', settings.url_ul + '?r=' + Math.random(), true) // random string to prevent caching
         xhr[i].setRequestHeader('Content-Encoding', 'identity') // disable compression (some browsers may refuse it, but data is incompressible anyway)
@@ -273,10 +276,10 @@ function ulTest (done) {
           testStream(i, 0)
         }.bind(this)
         xhr[i].upload.onerror = function () {
-          // error, abort
-          failed = true
+          if (settings.xhr_ignoreErrors === 0) failed=true //abort
           try { xhr[i].abort() } catch (e) { }
           delete (xhr[i])
+          if (settings.xhr_ignoreErrors === 1) testStream(i, 100) //restart stream after 100ms
         }.bind(this)
         // send xhr
         xhr[i].open('POST', settings.url_ul + '?r=' + Math.random(), true) // random string to prevent caching
@@ -337,10 +340,18 @@ function pingTest (done) {
     }.bind(this)
     xhr[0].onerror = function () {
       // a ping failed, cancel test
-      pingStatus = 'Fail'
-      jitterStatus = 'Fail'
-      clearRequests()
-      done()
+      if (settings.xhr_ignoreErrors === 0) { //abort
+        pingStatus = 'Fail'
+        jitterStatus = 'Fail'
+        clearRequests()
+        done()
+      }
+      if (settings.xhr_ignoreErrors === 1) doPing() //retry ping
+
+      if(settings.xhr_ignoreErrors === 2){ //ignore failed ping
+        i++
+        if (i < settings.count_ping) doPing(); else done() // more pings to do?
+      }
     }.bind(this)
     // sent xhr
     xhr[0].open('GET', settings.url_ping + '?r=' + Math.random(), true) // random string to prevent caching

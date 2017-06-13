@@ -1,7 +1,7 @@
 # HTML5 Speedtest
 
 > by Federico Dossena  
-> Version 4.2.1, May 15 2017  
+> Version 4.2.2, June 13 2017  
 > [https://github.com/adolfintel/speedtest/](https://github.com/adolfintel/speedtest/)
 
 
@@ -164,6 +164,12 @@ w.postMessage('start {"param1": "value1", "param2": "value2", ...}')
     * Recommended: `>=1`
     * Default override: 1 on Firefox if enable_quirks is true
     * Default override: 10 on Safari if enable_quirks is true
+* __xhr_ignoreErrors__: how to react to errors in download/upload streams and the ping test
+    * `0`: Fail test on error (behaviour of previous versions of this test)
+    * `1`: Restart a stream/ping when it fails
+    * `2`: Ignore all errors
+    * Default: `1`
+    * Recommended: `1`
 * __allow_fetchAPI__: allow the use of Fetch API for the download test instead of regular XHR. Experimental, not recommended.
     * Default: `false`
 * __force_fetchAPI__: forces the use of Fetch API on all browsers that support it
@@ -182,7 +188,7 @@ w.postMessage('abort')
 
 This will terminate all network activity and stop the worker.
 
-__Important:__ do not simply kill the worker while it's running, as it will leave pending XHR requests!
+__Important:__ do not simply kill the worker while it's running, as it may leave pending XHR requests!
 
 
 ## Using the test without PHP
