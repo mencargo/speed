@@ -1,7 +1,7 @@
 # HTML5 Speedtest
 
 > by Federico Dossena  
-> Version 4.2.2, June 13 2017  
+> Version 4.2.3, June 14 2017  
 > [https://github.com/adolfintel/speedtest/](https://github.com/adolfintel/speedtest/)
 
 
@@ -206,7 +206,7 @@ It is important here to turn off compression, and generate incompressible data.
 A symlink to `/dev/urandom` is also ok.
 
 #### Replacement for `empty.php`
-Your replacement must simply respond with a HTTP code 200 and send nothing else. You may want to send additional headers to disable caching.
+Your replacement must simply respond with a HTTP code 200 and send nothing else. You may want to send additional headers to disable caching. The test assumes that Connection:keep-alive is sent by the server.
 
 #### Replacement for `getIP.php`
 Your replacement must simply respond with the client's IP as plaintext. Nothing fancy.
@@ -220,6 +220,7 @@ w.postMessage('start {"url_dl": "newGarbageURL", "url_ul": "newEmptyURL", "url_p
 
 
 ## Known bugs and limitations
+* The ping/jitter test is measured by seeing how long it takes for an empty XHR to complete. It is not an acutal ICMP ping
 * __Chrome:__ high CPU usage from XHR requests with very fast connections (like gigabit).
   For this reason, the test may report inaccurate results if your CPU is too slow. (Does not affect most computers)
 * __IE11:__ the upload test is not precise on very fast connections

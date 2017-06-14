@@ -1,5 +1,5 @@
 /*
-	HTML5 Speedtest v4.2.2
+	HTML5 Speedtest v4.2.3
 	by Federico Dossena
 	https://github.com/adolfintel/speedtest/
 	GNU LGPLv3 License
@@ -325,7 +325,7 @@ function pingTest (done) {
       if (i === 0) {
         prevT = new Date().getTime() // first pong
       } else {
-        var instspd = (new Date().getTime() - prevT) / 2
+        var instspd = (new Date().getTime() - prevT)
         var instjitter = Math.abs(instspd - prevInstspd)
         if (i === 1) ping = instspd; /* first ping, can't tell jiutter yet*/ else {
           ping = ping * 0.9 + instspd * 0.1 // ping, weighted average
