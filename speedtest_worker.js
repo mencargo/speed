@@ -259,7 +259,7 @@ function ulTest (done) {
           if (settings.xhr_ignoreErrors === 0) failed = true //abort
           try { xhr[i].abort() } catch (e) { }
           delete (xhr[i])
-          if (settings.xhr_ignoreErrors === 1) testStatus(i,100); //restart stream after 100ms
+          if (settings.xhr_ignoreErrors === 1) testStream(i,100); //restart stream after 100ms
         }
         xhr[i].open('POST', settings.url_ul + '?r=' + Math.random(), true) // random string to prevent caching
         xhr[i].setRequestHeader('Content-Encoding', 'identity') // disable compression (some browsers may refuse it, but data is incompressible anyway)
