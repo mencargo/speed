@@ -1,7 +1,7 @@
 # HTML5 Speedtest
 
 > by Federico Dossena  
-> Version 4.2.3, June 14 2017  
+> Version 4.2.4, June 15 2017  
 > [https://github.com/adolfintel/speedtest/](https://github.com/adolfintel/speedtest/)
 
 
@@ -178,6 +178,10 @@ Fetch API are used if the following conditions are met:
     * allow_fetchAPI is true
     * Chromium-based browser with support for Fetch API and enable_quirks is true
 OR force_fetchAPI is true and the browser supports Fetch API
+* __overheadCompensationFactor__: compensation for HTTP and network overhead. Default value assumes typical MTUs used over the Internet. You might want to change this if you're using this in your internal network with different MTUs, or if you're using IPv6 instead of IPv4.
+    * Default: `1.13359567567567567568` (1048576/925000) assumes HTTP+TCP+IPv4+ETH with typical MTUs used over the Internet
+    * `1460 / 1514`: TCP+IPv4+ETH, ignoring HTTP overhead (this measures the speed at which you actually download/upload files instead of estimating the speed of the connection)
+    * `1440 / 1514`: TCP+IPv6+ETH, ignoring HTTP overhead (this measures the speed at which you actually download/upload files instead of estimating the speed of the connection)
 
 ### Aborting the test prematurely
 The test can be aborted at any time by sending an abort command to the worker:

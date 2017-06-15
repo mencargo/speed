@@ -1,5 +1,5 @@
 /*
-	HTML5 Speedtest v4.2.3
+	HTML5 Speedtest v4.2.4
 	by Federico Dossena
 	https://github.com/adolfintel/speedtest/
 	GNU LGPLv3 License
@@ -29,7 +29,8 @@ var settings = {
   garbagePhp_chunkSize: 20, // size of chunks sent by garbage.php (can be different if enable_quirks is active)
   enable_quirks: true, // enable quirks for specific browsers. currently it overrides settings to optimize for specific browsers, unless they are already being overridden with the start command
   allow_fetchAPI: false, // enables Fetch API. currently disabled because it leaks memory like no tomorrow
-  force_fetchAPI: false // when Fetch API is enabled, it will force usage on every browser that supports it
+  force_fetchAPI: false, // when Fetch API is enabled, it will force usage on every browser that supports it
+  overheadCompensationFactor: 1048576/925000 //compensation for HTTP+TCP+IP+ETH overhead. 925000 is how much data is actually carried over 1048576 (1mb) bytes downloaded/uploaded. This default value assumes HTTP+TCP+IPv4+ETH with typical MTUs over the Internet. You may want to change this if you're going through your local network with a different MTU or if you're going over IPv6 (see doc.md for some other values)
 }
 
 var xhr = null // array of currently active xhr requests
@@ -95,9 +96,11 @@ this.addEventListener('message', function (e) {
       if (typeof s.count_ping !== 'undefined') settings.count_ping = s.count_ping // number of pings for ping test
       if (typeof s.xhr_dlMultistream !== 'undefined') settings.xhr_dlMultistream = s.xhr_dlMultistream // number of download streams
       if (typeof s.xhr_ulMultistream !== 'undefined') settings.xhr_ulMultistream = s.xhr_ulMultistream // number of upload streams
+      if (typeof s.xhr_ignoreErrors !== 'undefined') settings.xhr_ignoreErrors = s.xhr_ignoreErrors // what to do in case of errors during the test
       if (typeof s.xhr_dlUseBlob !== 'undefined') settings.xhr_dlUseBlob = s.xhr_dlUseBlob // use blob for download test
       if (typeof s.garbagePhp_chunkSize !== 'undefined') settings.garbagePhp_chunkSize = s.garbagePhp_chunkSize // size of garbage.php chunks
       if (typeof s.force_fetchAPI !== 'undefined') settings.force_fetchAPI = s.force_fetchAPI // use fetch api on all browsers that support it if enabled
+      if (typeof s.overheadCompensationFactor !== 'undefined') settings.overheadCompensationFactor = s.overheadCompensationFactor //custom overhead compensation factor (default assumes HTTP+TCP+IP+ETH with typical MTUs)
       if (settings.allow_fetchAPI && settings.force_fetchAPI && (!!self.fetch)) useFetchAPI = true
     } catch (e) { }
     // run the tests
@@ -203,7 +206,7 @@ function dlTest (done) {
     var t = new Date().getTime() - startT
     if (t < 200) return
     var speed = totLoaded / (t / 1000.0)
-    dlStatus = ((speed * 8) / 925000.0).toFixed(2) // 925000 instead of 1048576 to account for overhead
+    dlStatus = ((speed * 8 * settings.overheadCompensationFactor)/1048576).toFixed(2) // speed is multiplied by 8 to go from bytes to bits, overhead compensation is applied, then everything is divided by 1048576 to go to megabits/s
     if ((t / 1000.0) > settings.time_dl || failed) { // test is over, stop streams and timer
       if (failed || isNaN(dlStatus)) dlStatus = 'Fail'
       clearRequests()
@@ -297,7 +300,7 @@ function ulTest (done) {
     var t = new Date().getTime() - startT
     if (t < 200) return
     var speed = totLoaded / (t / 1000.0)
-    ulStatus = ((speed * 8) / 925000.0).toFixed(2) // 925000 instead of 1048576 to account for overhead
+    ulStatus = ((speed * 8 * settings.overheadCompensationFactor)/1048576).toFixed(2) // speed is multiplied by 8 to go from bytes to bits, overhead compensation is applied, then everything is divided by 1048576 to go to megabits/s
     if ((t / 1000.0) > settings.time_ul || failed) { // test is over, stop streams and timer
       if (failed || isNaN(ulStatus)) ulStatus = 'Fail'
       clearRequests()
