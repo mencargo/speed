@@ -1,5 +1,5 @@
 /*
-	HTML5 Speedtest v4.2.4
+	HTML5 Speedtest v4.2.5
 	by Federico Dossena
 	https://github.com/adolfintel/speedtest/
 	GNU LGPLv3 License
@@ -17,6 +17,8 @@ var clientIp = '' // client's IP address as reported by getIP.php
 var settings = {
   time_ul: 15, // duration of upload test in seconds
   time_dl: 15, // duration of download test in seconds
+  time_ulGraceTime: 3, //time to wait in seconds before actually measuring ul speed (wait for buffers to fill)
+  time_dlGraceTime: 1.5, //time to wait in seconds before actually measuring dl speed (wait for TCP window to increase)
   count_ping: 35, // number of pings to perform in ping test
   url_dl: 'garbage.php', // path to a large file or garbage.php, used for download test. must be relative to this js file
   url_ul: 'empty.php', // path to an empty file, used for upload test. must be relative to this js file
@@ -43,6 +45,11 @@ var interval = null // timer used in tests
 		-(we're on chrome that supports fetch api AND enable_quirks is true) OR (we're on any browser that supports fetch api AND force_fetchAPI is true)
 */
 var useFetchAPI = false
+
+/*
+  this function is used on URLs passed in the settings to determine whether we need a ? or an & as a separator
+*/
+function url_sep (url) { return url.match(/\?/) ? '&' : '?'; }
 
 /*
 	listener for commands from main thread to this worker.
@@ -100,6 +107,8 @@ this.addEventListener('message', function (e) {
       if (typeof s.xhr_dlUseBlob !== 'undefined') settings.xhr_dlUseBlob = s.xhr_dlUseBlob // use blob for download test
       if (typeof s.garbagePhp_chunkSize !== 'undefined') settings.garbagePhp_chunkSize = s.garbagePhp_chunkSize // size of garbage.php chunks
       if (typeof s.force_fetchAPI !== 'undefined') settings.force_fetchAPI = s.force_fetchAPI // use fetch api on all browsers that support it if enabled
+      if (typeof s.time_dlGraceTime !== 'undefined') settings.time_dlGraceTime = s.time_dlGraceTime // dl test grace time before measuring
+      if (typeof s.time_ulGraceTime !== 'undefined') settings.time_ulGraceTime = s.time_ulGraceTime // ul test grace time before measuring
       if (typeof s.overheadCompensationFactor !== 'undefined') settings.overheadCompensationFactor = s.overheadCompensationFactor //custom overhead compensation factor (default assumes HTTP+TCP+IP+ETH with typical MTUs)
       if (settings.allow_fetchAPI && settings.force_fetchAPI && (!!self.fetch)) useFetchAPI = true
     } catch (e) { }
@@ -137,7 +146,7 @@ function getIp (done) {
   xhr.onerror = function () {
     done()
   }
-  xhr.open('GET', settings.url_getIp + '?r=' + Math.random(), true)
+  xhr.open('GET', settings.url_getIp + url_sep(settings.url_getIp) + 'r=' + Math.random(), true)
   xhr.send()
 }
 // download test, calls done function when it's over
@@ -146,6 +155,7 @@ function dlTest (done) {
   if (dlCalled) return; else dlCalled = true // dlTest already called?
   var totLoaded = 0.0, // total number of loaded bytes
     startT = new Date().getTime(), // timestamp when test was started
+    graceTimeDone = false, //set to true after the grace time is past
     failed = false // set to true if a stream fails
   xhr = []
   // function to create a download stream. streams are slightly delayed so that they will not end at the same time
@@ -153,7 +163,7 @@ function dlTest (done) {
     setTimeout(function () {
       if (testStatus !== 1) return // delayed stream ended up starting after the end of the download test
       if (useFetchAPI) {
-        xhr[i] = fetch(settings.url_dl + '?r=' + Math.random() + '&ckSize=' + settings.garbagePhp_chunkSize).then(function (response) {
+        xhr[i] = fetch(settings.url_dl + url_sep(settings.url_dl) + 'r=' + Math.random() + '&ckSize=' + settings.garbagePhp_chunkSize).then(function (response) {
           var reader = response.body.getReader()
           var consume = function () {
             return reader.read().then(function (result) {
@@ -192,7 +202,7 @@ function dlTest (done) {
         }.bind(this)
         // send xhr
         try { if (settings.xhr_dlUseBlob) xhr[i].responseType = 'blob'; else xhr[i].responseType = 'arraybuffer' } catch (e) { }
-        xhr[i].open('GET', settings.url_dl + '?r=' + Math.random() + '&ckSize=' + settings.garbagePhp_chunkSize, true) // random string to prevent caching
+        xhr[i].open('GET', settings.url_dl + url_sep(settings.url_dl) + 'r=' + Math.random() + '&ckSize=' + settings.garbagePhp_chunkSize, true) // random string to prevent caching
         xhr[i].send()
       }
     }.bind(this), 1 + delay)
@@ -205,13 +215,23 @@ function dlTest (done) {
   interval = setInterval(function () {
     var t = new Date().getTime() - startT
     if (t < 200) return
-    var speed = totLoaded / (t / 1000.0)
-    dlStatus = ((speed * 8 * settings.overheadCompensationFactor)/1048576).toFixed(2) // speed is multiplied by 8 to go from bytes to bits, overhead compensation is applied, then everything is divided by 1048576 to go to megabits/s
-    if ((t / 1000.0) > settings.time_dl || failed) { // test is over, stop streams and timer
-      if (failed || isNaN(dlStatus)) dlStatus = 'Fail'
-      clearRequests()
-      clearInterval(interval)
-      done()
+    if (!graceTimeDone){
+      if (t > 1000 * settings.time_dlGraceTime){
+        if (totLoaded > 0){ // if the connection is so slow that we didn't get a single chunk yet, do not reset
+          startT = new Date().getTime()
+          totLoaded = 0.0;
+        }
+        graceTimeDone = true;
+      }
+    }else{
+      var speed = totLoaded / (t / 1000.0)
+      dlStatus = ((speed * 8 * settings.overheadCompensationFactor)/1048576).toFixed(2) // speed is multiplied by 8 to go from bytes to bits, overhead compensation is applied, then everything is divided by 1048576 to go to megabits/s
+      if ((t / 1000.0) > settings.time_dl || failed) { // test is over, stop streams and timer
+        if (failed || isNaN(dlStatus)) dlStatus = 'Fail'
+        clearRequests()
+        clearInterval(interval)
+        done()
+      }
     }
   }.bind(this), 200)
 }
@@ -230,9 +250,10 @@ reqsmall = new Blob(reqsmall)
 var ulCalled = false // used to prevent multiple accidental calls to ulTest
 function ulTest (done) {
   if (ulCalled) return; else ulCalled = true // ulTest already called?
-  var totLoaded = 0.0 // total number of transmitted bytes
-  var startT = new Date().getTime() // timestamp when test was started
-  var failed = false // set to true if a stream fails
+  var totLoaded = 0.0, // total number of transmitted bytes
+    startT = new Date().getTime(), // timestamp when test was started
+    graceTimeDone = false, //set to true after the grace time is past
+    failed = false // set to true if a stream fails
   xhr = []
   // function to create an upload stream. streams are slightly delayed so that they will not end at the same time
   var testStream = function (i, delay) {
@@ -261,7 +282,7 @@ function ulTest (done) {
           delete (xhr[i])
           if (settings.xhr_ignoreErrors === 1) testStream(i,100); //restart stream after 100ms
         }
-        xhr[i].open('POST', settings.url_ul + '?r=' + Math.random(), true) // random string to prevent caching
+        xhr[i].open('POST', settings.url_ul + url_sep(settings.url_ul) + 'r=' + Math.random(), true) // random string to prevent caching
         xhr[i].setRequestHeader('Content-Encoding', 'identity') // disable compression (some browsers may refuse it, but data is incompressible anyway)
         xhr[i].send(reqsmall)
       } else {
@@ -285,7 +306,7 @@ function ulTest (done) {
           if (settings.xhr_ignoreErrors === 1) testStream(i, 100) //restart stream after 100ms
         }.bind(this)
         // send xhr
-        xhr[i].open('POST', settings.url_ul + '?r=' + Math.random(), true) // random string to prevent caching
+        xhr[i].open('POST', settings.url_ul + url_sep(settings.url_ul) + 'r=' + Math.random(), true) // random string to prevent caching
         xhr[i].setRequestHeader('Content-Encoding', 'identity') // disable compression (some browsers may refuse it, but data is incompressible anyway)
         xhr[i].send(req)
       }
@@ -299,13 +320,23 @@ function ulTest (done) {
   interval = setInterval(function () {
     var t = new Date().getTime() - startT
     if (t < 200) return
-    var speed = totLoaded / (t / 1000.0)
-    ulStatus = ((speed * 8 * settings.overheadCompensationFactor)/1048576).toFixed(2) // speed is multiplied by 8 to go from bytes to bits, overhead compensation is applied, then everything is divided by 1048576 to go to megabits/s
-    if ((t / 1000.0) > settings.time_ul || failed) { // test is over, stop streams and timer
-      if (failed || isNaN(ulStatus)) ulStatus = 'Fail'
-      clearRequests()
-      clearInterval(interval)
-      done()
+    if (!graceTimeDone){
+      if (t > 1000 * settings.time_ulGraceTime){
+        if (totLoaded > 0){ // if the connection is so slow that we didn't get a single chunk yet, do not reset
+          startT = new Date().getTime()
+          totLoaded = 0.0;
+        }
+        graceTimeDone = true;
+      }
+    }else{
+      var speed = totLoaded / (t / 1000.0)
+      ulStatus = ((speed * 8 * settings.overheadCompensationFactor)/1048576).toFixed(2) // speed is multiplied by 8 to go from bytes to bits, overhead compensation is applied, then everything is divided by 1048576 to go to megabits/s
+      if ((t / 1000.0) > settings.time_ul || failed) { // test is over, stop streams and timer
+        if (failed || isNaN(ulStatus)) ulStatus = 'Fail'
+        clearRequests()
+        clearInterval(interval)
+        done()
+      }
     }
   }.bind(this), 200)
 }
@@ -330,7 +361,7 @@ function pingTest (done) {
       } else {
         var instspd = (new Date().getTime() - prevT)
         var instjitter = Math.abs(instspd - prevInstspd)
-        if (i === 1) ping = instspd; /* first ping, can't tell jiutter yet*/ else {
+        if (i === 1) ping = instspd; /* first ping, can't tell jitter yet*/ else {
           ping = ping * 0.9 + instspd * 0.1 // ping, weighted average
           jitter = instjitter > jitter ? (jitter * 0.2 + instjitter * 0.8) : (jitter * 0.9 + instjitter * 0.1) // update jitter, weighted average. spikes in ping values are given more weight.
         }
@@ -351,13 +382,13 @@ function pingTest (done) {
       }
       if (settings.xhr_ignoreErrors === 1) doPing() //retry ping
 
-      if(settings.xhr_ignoreErrors === 2){ //ignore failed ping
+      if (settings.xhr_ignoreErrors === 2){ //ignore failed ping
         i++
         if (i < settings.count_ping) doPing(); else done() // more pings to do?
       }
     }.bind(this)
     // sent xhr
-    xhr[0].open('GET', settings.url_ping + '?r=' + Math.random(), true) // random string to prevent caching
+    xhr[0].open('GET', settings.url_ping + url_sep(settings.url_ping) + 'r=' + Math.random(), true) // random string to prevent caching
     xhr[0].send()
   }.bind(this)
   doPing() // start first ping

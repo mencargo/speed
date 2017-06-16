@@ -88,8 +88,8 @@
                     // speedtest cancelled, clear output data
                     data = []
                 }
-                download.textContent = data[1]
-                upload.textContent = data[2]
+                download.textContent = (status==1&&data[1]==0)?"Starting":data[1]
+                upload.textContent = (status==3&&data[2]==0)?"Starting":data[2]
                 ping.textContent = data[3]
                 ip.textContent = data[4]
                 jitter.textContent = data[5]

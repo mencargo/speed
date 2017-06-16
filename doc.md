@@ -1,7 +1,7 @@
 # HTML5 Speedtest
 
 > by Federico Dossena  
-> Version 4.2.4, June 15 2017  
+> Version 4.2.5, June 16 2017  
 > [https://github.com/adolfintel/speedtest/](https://github.com/adolfintel/speedtest/)
 
 
@@ -95,32 +95,32 @@ format:
     * `5` = Test aborted
 * __dlStatus__ is either
     * Empty string (not started or aborted)
-    * Download speed in Megabit/s as a number with 2 digits
+    * Download speed in Megabit/s as a number with 2 decimals
     * The string "Fail" (test failed)
 * __ulStatus__ is either
     * Empty string (not started or aborted)
-    * Upload speed in Megabit/s as a number with 2 digits
+    * Upload speed in Megabit/s as a number with 2 decimals
     * The string "Fail" (test failed)
 * __pingStatus__ is either
     * Empty string (not started or aborted)
-    * Estimated ping in milliseconds as a number with 2 digits
+    * Estimated ping in milliseconds as a number with 2 decimals
     * The string "Fail" (test failed)
 * __clientIp__ is either
     * Empty string (not fetched yet or failed)
     * The client's IP address as a string
 * __jitterStatus__ is either
     * Empty string (not started or aborted)
-    * Estimated jitter in milliseconds as a number with 2 digits (lower = stable connection)
+    * Estimated jitter in milliseconds as a number with 2 decimals (lower = stable connection)
     * The string "Fail" (test failed)
 
 ### Starting the test
-To start the test, send the start command to the worker:
+To start the test with the default settings, which is usually the best choice, send the start command to the worker:
 
 ```js
 w.postMessage('start')
 ```
 
-This starts the test with the default settings, which is usually the best choice. If you want, you can change these settings and pass them to the worker as JSON with like this:
+If you want, you can change these settings and pass them to the worker as JSON when you start it, like this:
 
 ```js
 w.postMessage('start {"param1": "value1", "param2": "value2", ...}')
@@ -139,7 +139,7 @@ w.postMessage('start {"param1": "value1", "param2": "value2", ...}')
 * __url_dl__: path to garbage.php or a large file to use for the download test
     * Default: `garbage.php`
     * __Important:__ path is relative to js file
-* __url_ul__: path to ab empty file or empty.php to use for the upload test
+* __url_ul__: path to an empty file or empty.php to use for the upload test
     * Default: `empty.php`
     * __Important:__ path is relative to js file
 * __url_ping__: path to an empty file or empty.php to use for the ping test
@@ -148,7 +148,9 @@ w.postMessage('start {"param1": "value1", "param2": "value2", ...}')
 * __url_getIp__: path to getIP.php or replacement
     * Default: `getIP.php`
     * __Important:__ path is relative to js file
-* __enable_quirks__: enables browser-specific optimizations. These optimizations override some of the default settings below. They do not override settings that are explicitly set.
+
+#### Advanced test parameters
+* __enable_quirks__: enables browser-specific optimizations. These optimizations override some of the default settings. They do not override settings that are explicitly set.
     * Default: `true`
 * __garbagePhp_chunkSize__: size of chunks sent by garbage.php in megabytes
     * Default: `20`
@@ -170,6 +172,12 @@ w.postMessage('start {"param1": "value1", "param2": "value2", ...}')
     * `2`: Ignore all errors
     * Default: `1`
     * Recommended: `1`
+* __time_dlGraceTime__: How long to wait (in seconds) before actually measuring the download speed. This is a good idea because we want to wait for the TCP window to be at its maximum (or close to it)
+    * Default: `1.5`
+    * Recommended: `>=0`
+* __time_ulGraceTime__: How long to wait (in seconds) before actually measuring the upload speed. This is a good idea because we want to wait for the buffers to be full (avoids the peak at the beginning of the test)
+    * Default: `3`
+    * Recommended: `>=1`
 * __allow_fetchAPI__: allow the use of Fetch API for the download test instead of regular XHR. Experimental, not recommended.
     * Default: `false`
 * __force_fetchAPI__: forces the use of Fetch API on all browsers that support it
@@ -180,8 +188,11 @@ Fetch API are used if the following conditions are met:
 OR force_fetchAPI is true and the browser supports Fetch API
 * __overheadCompensationFactor__: compensation for HTTP and network overhead. Default value assumes typical MTUs used over the Internet. You might want to change this if you're using this in your internal network with different MTUs, or if you're using IPv6 instead of IPv4.
     * Default: `1.13359567567567567568` (1048576/925000) assumes HTTP+TCP+IPv4+ETH with typical MTUs used over the Internet
-    * `1460 / 1514`: TCP+IPv4+ETH, ignoring HTTP overhead (this measures the speed at which you actually download/upload files instead of estimating the speed of the connection)
-    * `1440 / 1514`: TCP+IPv6+ETH, ignoring HTTP overhead (this measures the speed at which you actually download/upload files instead of estimating the speed of the connection)
+    * `1.0513`: HTTP+TCP+IPv6+ETH, over the Internet (empirically tested, not calculated)
+    * `1.0369`: Alternative value for HTTP+TCP+IPv4+ETH, over the Internet (empirically tested, not calculated)
+    * `1460 / 1514`: TCP+IPv4+ETH, ignoring HTTP overhead
+    * `1440 / 1514`: TCP+IPv6+ETH, ignoring HTTP overhead
+    * `1`: ignore overheads. This measures the speed at which you actually download and upload files
 
 ### Aborting the test prematurely
 The test can be aborted at any time by sending an abort command to the worker:
@@ -194,6 +205,15 @@ This will terminate all network activity and stop the worker.
 
 __Important:__ do not simply kill the worker while it's running, as it may leave pending XHR requests!
 
+## Troubleshooting
+These are the most common issues reported by users, and how to fix them
+
+#### Download test gives very low result
+Are garbage.php and empty.php (or your replacements) reachable?
+Press F12, select network and start the test. Do you see errors? (cancelled requests are not errors)
+
+#### Upload test is inaccurate, and I see lag spikes
+Check your server's maximum POST size, make sure it's at least 20Mbytes, possibly more
 
 ## Using the test without PHP
 If your server does not support PHP, or you're using something newer like Node.js, you can still use this test by replacing `garbage.php`, `empty.php` and `getIP.php` with equivalents.
@@ -215,7 +235,7 @@ Your replacement must simply respond with a HTTP code 200 and send nothing else.
 #### Replacement for `getIP.php`
 Your replacement must simply respond with the client's IP as plaintext. Nothing fancy.
 
-### JS
+#### JS
 You need to start the test with your replacements like this:
 
 ```js
@@ -228,6 +248,7 @@ w.postMessage('start {"url_dl": "newGarbageURL", "url_ul": "newEmptyURL", "url_p
 * __Chrome:__ high CPU usage from XHR requests with very fast connections (like gigabit).
   For this reason, the test may report inaccurate results if your CPU is too slow. (Does not affect most computers)
 * __IE11:__ the upload test is not precise on very fast connections
+* __IE11:__ the upload test may not work over HTTPS
 * __Safari:__ works, but needs more testing and tweaking for very fast connections
 
 ## Making changes
@@ -241,7 +262,7 @@ To create the minified version, use UglifyJS like this:
 uglifyjs -c --screw-ie8 speedtest_worker.js > speedtest_worker.min.js
 ```
 
-Pull requests are much appreciated. If you don't use github (or git), simply contact me.
+Pull requests are much appreciated. If you don't use github (or git), simply contact me at dosse91@paranoici.org.
 
 __Important:__ please add your name to modified versions to distinguish them from the main project.
 
