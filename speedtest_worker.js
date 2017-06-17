@@ -111,7 +111,7 @@ this.addEventListener('message', function (e) {
       if (typeof s.time_ulGraceTime !== 'undefined') settings.time_ulGraceTime = s.time_ulGraceTime // ul test grace time before measuring
       if (typeof s.overheadCompensationFactor !== 'undefined') settings.overheadCompensationFactor = s.overheadCompensationFactor //custom overhead compensation factor (default assumes HTTP+TCP+IP+ETH with typical MTUs)
       if (settings.allow_fetchAPI && settings.force_fetchAPI && (!!self.fetch)) useFetchAPI = true
-    } catch (e) { }
+    } catch (e) { console.warn("Possible error in custom test settings. Some settings may not be applied. Exception: "+e) }
     // run the tests
     console.log(settings)
     console.log('Fetch API: ' + useFetchAPI)
