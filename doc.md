@@ -215,6 +215,12 @@ Press F12, select network and start the test. Do you see errors? (cancelled requ
 #### Upload test is inaccurate, and I see lag spikes
 Check your server's maximum POST size, make sure it's at least 20Mbytes, possibly more
 
+#### All tests are wrong, give extremely high results, browser lags/crashes, ...
+You're running the test on localhost, therefore it is trying to measure the speed of your loopback interface. The test is meant to be run over an Internet connection, from a different machine.
+
+#### Ping test shows double the actual ping
+Make sure your server is sending the ```Connection:keep-alive``` header
+
 ## Using the test without PHP
 If your server does not support PHP, or you're using something newer like Node.js, you can still use this test by replacing `garbage.php`, `empty.php` and `getIP.php` with equivalents.
 
