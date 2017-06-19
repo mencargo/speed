@@ -68,7 +68,11 @@ this.addEventListener('message', function (e) {
     testStatus = 1
     try {
       // parse settings, if present
-      var s = JSON.parse(e.data.substring(5))
+      var s = {}
+      try{
+        var ss = e.data.substring(5);
+        if (ss) s = JSON.parse(ss);
+      }catch(e){ console.warn("Error parsing custom settings JSON. Please check your syntax"); }
       if (typeof s.url_dl !== 'undefined') settings.url_dl = s.url_dl // download url
       if (typeof s.url_ul !== 'undefined') settings.url_ul = s.url_ul // upload url
       if (typeof s.url_ping !== 'undefined') settings.url_ping = s.url_ping // ping url
