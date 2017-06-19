@@ -16,7 +16,11 @@ Only modern browsers are supported (IE11, latest Edge, latest Chrome, latest Fir
  - Your server must accept large POST requests (up to 20 Megabytes), otherwise the upload test will fail
  - It's also better if your server does not use compression, but it's not mandatory
 
-## How to use
+## Quick installation videos
+* [Debian 9.0 with Apache](https://fdossena.com/?p=speedtest/quickstart_deb.frag)
+* [Windows Server 2016 with IIS](https://fdossena.com/?p=speedtest/quickstart_win.frag)
+
+## How to use in your site
 See the examples or doc.md
 
 ## License

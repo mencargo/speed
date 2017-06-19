@@ -1,7 +1,7 @@
 # HTML5 Speedtest
 
 > by Federico Dossena  
-> Version 4.2.5, June 16 2017  
+> Version 4.2.6, June 19 2017  
 > [https://github.com/adolfintel/speedtest/](https://github.com/adolfintel/speedtest/)
 
 
@@ -24,6 +24,9 @@ First of all, the requirements to run this test:
 
 If this looks good, let's proceed and see how to use the test.
 
+## Quick installation videos
+* [Debian 9.0 with Apache](https://fdossena.com/?p=speedtest/quickstart_deb.frag)
+* [Windows Server 2016 with IIS](https://fdossena.com/?p=speedtest/quickstart_win.frag)
 
 ## Installation
 To install the test on your server, upload the following files:
