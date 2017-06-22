@@ -1,7 +1,7 @@
 # HTML5 Speedtest
 
 > by Federico Dossena  
-> Version 4.2.6, June 19 2017  
+> Version 4.2.7, June 22 2017  
 > [https://github.com/adolfintel/speedtest/](https://github.com/adolfintel/speedtest/)
 
 
@@ -168,7 +168,6 @@ w.postMessage('start {"param1": "value1", "param2": "value2", ...}')
     * Default: `3`
     * Recommended: `>=1`
     * Default override: 1 on Firefox if enable_quirks is true
-    * Default override: 10 on Safari if enable_quirks is true
 * __xhr_ignoreErrors__: how to react to errors in download/upload streams and the ping test
     * `0`: Fail test on error (behaviour of previous versions of this test)
     * `1`: Restart a stream/ping when it fails
@@ -181,14 +180,6 @@ w.postMessage('start {"param1": "value1", "param2": "value2", ...}')
 * __time_ulGraceTime__: How long to wait (in seconds) before actually measuring the upload speed. This is a good idea because we want to wait for the buffers to be full (avoids the peak at the beginning of the test)
     * Default: `3`
     * Recommended: `>=1`
-* __allow_fetchAPI__: allow the use of Fetch API for the download test instead of regular XHR. Experimental, not recommended.
-    * Default: `false`
-* __force_fetchAPI__: forces the use of Fetch API on all browsers that support it
-    * Default: `false`
-Fetch API are used if the following conditions are met:
-    * allow_fetchAPI is true
-    * Chromium-based browser with support for Fetch API and enable_quirks is true
-OR force_fetchAPI is true and the browser supports Fetch API
 * __overheadCompensationFactor__: compensation for HTTP and network overhead. Default value assumes typical MTUs used over the Internet. You might want to change this if you're using this in your internal network with different MTUs, or if you're using IPv6 instead of IPv4.
     * Default: `1.13359567567567567568` (1048576/925000) assumes HTTP+TCP+IPv4+ETH with typical MTUs used over the Internet
     * `1.0513`: HTTP+TCP+IPv6+ETH, over the Internet (empirically tested, not calculated)

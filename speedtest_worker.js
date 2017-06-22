@@ -1,5 +1,5 @@
 /*
-	HTML5 Speedtest v4.2.5
+	HTML5 Speedtest v4.2.7
 	by Federico Dossena
 	https://github.com/adolfintel/speedtest/
 	GNU LGPLv3 License
@@ -30,8 +30,6 @@ var settings = {
   xhr_dlUseBlob: false, // if set to true, it reduces ram usage but uses the hard drive (useful with large garbagePhp_chunkSize and/or high xhr_dlMultistream)
   garbagePhp_chunkSize: 20, // size of chunks sent by garbage.php (can be different if enable_quirks is active)
   enable_quirks: true, // enable quirks for specific browsers. currently it overrides settings to optimize for specific browsers, unless they are already being overridden with the start command
-  allow_fetchAPI: false, // enables Fetch API. currently disabled because it leaks memory like no tomorrow
-  force_fetchAPI: false, // when Fetch API is enabled, it will force usage on every browser that supports it
   overheadCompensationFactor: 1048576/925000 //compensation for HTTP+TCP+IP+ETH overhead. 925000 is how much data is actually carried over 1048576 (1mb) bytes downloaded/uploaded. This default value assumes HTTP+TCP+IPv4+ETH with typical MTUs over the Internet. You may want to change this if you're going through your local network with a different MTU or if you're going over IPv6 (see doc.md for some other values)
 }
 
@@ -80,7 +78,6 @@ this.addEventListener('message', function (e) {
       if (typeof s.time_dl !== 'undefined') settings.time_dl = s.time_dl // duration of download test
       if (typeof s.time_ul !== 'undefined') settings.time_ul = s.time_ul // duration of upload test
       if (typeof s.enable_quirks !== 'undefined') settings.enable_quirks = s.enable_quirks // enable quirks or not
-      if (typeof s.allow_fetchAPI !== 'undefined') settings.allow_fetchAPI = s.allow_fetchAPI // allows fetch api to be used if supported
       // quirks for specific browsers. more may be added in future releases
       if (settings.enable_quirks) {
         var ua = navigator.userAgent
@@ -92,14 +89,7 @@ this.addEventListener('message', function (e) {
           // edge more precise with 3 download streams
           settings.xhr_dlMultistream = 3
         }
-        if ((/Safari.(\d+)/i.test(ua)) && !(/Chrome.(\d+)/i.test(ua))) {
-          // safari more precise with 10 upload streams and 5mb chunks for download test
-          settings.xhr_ulMultistream = 10
-          settings.garbagePhp_chunkSize = 5
-        }
         if (/Chrome.(\d+)/i.test(ua) && (!!self.fetch)) {
-          // chrome can't handle large xhr very well, use fetch api if available and allowed
-          if (settings.allow_fetchAPI) useFetchAPI = true
           // chrome more precise with 5 streams
           settings.xhr_dlMultistream = 5
         }
@@ -110,15 +100,12 @@ this.addEventListener('message', function (e) {
       if (typeof s.xhr_ignoreErrors !== 'undefined') settings.xhr_ignoreErrors = s.xhr_ignoreErrors // what to do in case of errors during the test
       if (typeof s.xhr_dlUseBlob !== 'undefined') settings.xhr_dlUseBlob = s.xhr_dlUseBlob // use blob for download test
       if (typeof s.garbagePhp_chunkSize !== 'undefined') settings.garbagePhp_chunkSize = s.garbagePhp_chunkSize // size of garbage.php chunks
-      if (typeof s.force_fetchAPI !== 'undefined') settings.force_fetchAPI = s.force_fetchAPI // use fetch api on all browsers that support it if enabled
       if (typeof s.time_dlGraceTime !== 'undefined') settings.time_dlGraceTime = s.time_dlGraceTime // dl test grace time before measuring
       if (typeof s.time_ulGraceTime !== 'undefined') settings.time_ulGraceTime = s.time_ulGraceTime // ul test grace time before measuring
       if (typeof s.overheadCompensationFactor !== 'undefined') settings.overheadCompensationFactor = s.overheadCompensationFactor //custom overhead compensation factor (default assumes HTTP+TCP+IP+ETH with typical MTUs)
-      if (settings.allow_fetchAPI && settings.force_fetchAPI && (!!self.fetch)) useFetchAPI = true
     } catch (e) { console.warn("Possible error in custom test settings. Some settings may not be applied. Exception: "+e) }
     // run the tests
     console.log(settings)
-    console.log('Fetch API: ' + useFetchAPI)
     getIp(function () { dlTest(function () { testStatus = 2; pingTest(function () { testStatus = 3; ulTest(function () { testStatus = 4 }) }) }) })
   }
   if (params[0] === 'abort') { // abort command
@@ -166,49 +153,33 @@ function dlTest (done) {
   var testStream = function (i, delay) {
     setTimeout(function () {
       if (testStatus !== 1) return // delayed stream ended up starting after the end of the download test
-      if (useFetchAPI) {
-        xhr[i] = fetch(settings.url_dl + url_sep(settings.url_dl) + 'r=' + Math.random() + '&ckSize=' + settings.garbagePhp_chunkSize).then(function (response) {
-          var reader = response.body.getReader()
-          var consume = function () {
-            return reader.read().then(function (result) {
-              if (result.done) testStream(i); else {
-                totLoaded += result.value.length
-                if (xhr[i].cancelRequested) reader.cancel()
-              }
-              return consume()
-            }.bind(this))
-          }.bind(this)
-          return consume()
-        }.bind(this))
-      } else {
-        var prevLoaded = 0 // number of bytes loaded last time onprogress was called
-        var x = new XMLHttpRequest()
-        xhr[i] = x
-        xhr[i].onprogress = function (event) {
-          if (testStatus !== 1) { try { x.abort() } catch (e) { } } // just in case this XHR is still running after the download test
-          // progress event, add number of new loaded bytes to totLoaded
-          var loadDiff = event.loaded <= 0 ? 0 : (event.loaded - prevLoaded)
-          if (isNaN(loadDiff) || !isFinite(loadDiff) || loadDiff < 0) return // just in case
-          totLoaded += loadDiff
-          prevLoaded = event.loaded
-        }.bind(this)
-        xhr[i].onload = function () {
-          // the large file has been loaded entirely, start again
-          try { xhr[i].abort() } catch (e) { } // reset the stream data to empty ram
-          testStream(i, 0)
-        }.bind(this)
-        xhr[i].onerror = function () {
-          // error
-          if (settings.xhr_ignoreErrors === 0) failed=true //abort
-          try { xhr[i].abort() } catch (e) { }
-          delete (xhr[i])
-          if (settings.xhr_ignoreErrors === 1) testStream(i, 100) //restart stream after 100ms
-        }.bind(this)
-        // send xhr
-        try { if (settings.xhr_dlUseBlob) xhr[i].responseType = 'blob'; else xhr[i].responseType = 'arraybuffer' } catch (e) { }
-        xhr[i].open('GET', settings.url_dl + url_sep(settings.url_dl) + 'r=' + Math.random() + '&ckSize=' + settings.garbagePhp_chunkSize, true) // random string to prevent caching
-        xhr[i].send()
-      }
+      var prevLoaded = 0 // number of bytes loaded last time onprogress was called
+      var x = new XMLHttpRequest()
+      xhr[i] = x
+      xhr[i].onprogress = function (event) {
+        if (testStatus !== 1) { try { x.abort() } catch (e) { } } // just in case this XHR is still running after the download test
+        // progress event, add number of new loaded bytes to totLoaded
+        var loadDiff = event.loaded <= 0 ? 0 : (event.loaded - prevLoaded)
+        if (isNaN(loadDiff) || !isFinite(loadDiff) || loadDiff < 0) return // just in case
+        totLoaded += loadDiff
+        prevLoaded = event.loaded
+      }.bind(this)
+      xhr[i].onload = function () {
+        // the large file has been loaded entirely, start again
+        try { xhr[i].abort() } catch (e) { } // reset the stream data to empty ram
+        testStream(i, 0)
+      }.bind(this)
+      xhr[i].onerror = function () {
+        // error
+        if (settings.xhr_ignoreErrors === 0) failed=true //abort
+        try { xhr[i].abort() } catch (e) { }
+        delete (xhr[i])
+        if (settings.xhr_ignoreErrors === 1) testStream(i, 100) //restart stream after 100ms
+      }.bind(this)
+      // send xhr
+      try { if (settings.xhr_dlUseBlob) xhr[i].responseType = 'blob'; else xhr[i].responseType = 'arraybuffer' } catch (e) { }
+      xhr[i].open('GET', settings.url_dl + url_sep(settings.url_dl) + 'r=' + Math.random() + '&ckSize=' + settings.garbagePhp_chunkSize, true) // random string to prevent caching
+      xhr[i].send()
     }.bind(this), 1 + delay)
   }.bind(this)
   // open streams
