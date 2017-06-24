@@ -23,6 +23,9 @@ Only modern browsers are supported (IE11, latest Edge, latest Chrome, latest Fir
 ## How to use in your site
 See the examples or doc.md
 
+## Docker
+Please see the ```docker``` branch
+
 ## License
 Copyright (C) 2016-2017 Federico Dossena
 
