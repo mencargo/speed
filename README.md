@@ -26,6 +26,9 @@ See the examples or doc.md
 ## Docker
 Please see the ```docker``` branch
 
+## Donate
+If you want to support this project, you can [send a donation via PayPal](https://www.paypal.me/sineisochronic).
+
 ## License
 Copyright (C) 2016-2017 Federico Dossena
 
