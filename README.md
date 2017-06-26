@@ -44,6 +44,9 @@ $ docker build -t adolfintel/speedtest:latest .
 $ docker run -d --name  speedtest -p 0.0.0.0:80:80 adolfintel/speedtest:latest
 ```
 
+## Donate
+If you want to support this project, you can [send a donation via PayPal](https://www.paypal.me/sineisochronic).
+
 ## License
 Copyright (C) 2016-2017 Federico Dossena
 
