@@ -23,7 +23,6 @@ Only modern browsers are supported (IE11, latest Edge, latest Chrome, latest Fir
 ## How to use in your site
 See the examples or doc.md
 
-<<<<<<< HEAD
 ## Docker + Docker Compose
 
 The project includes a basic `docker-compose.yml` for development.  To run, execute the following:
@@ -44,10 +43,7 @@ $ docker build -t adolfintel/speedtest:latest .
 
 $ docker run -d --name  speedtest -p 0.0.0.0:80:80 adolfintel/speedtest:latest
 ```
-=======
-## Docker
-Please see the ```docker``` branch
->>>>>>> master
+
 
 ## Donate
 If you want to support this project, you can [send a donation via PayPal](https://www.paypal.me/sineisochronic).
