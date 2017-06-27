@@ -203,8 +203,9 @@ __Important:__ do not simply kill the worker while it's running, as it may leave
 These are the most common issues reported by users, and how to fix them
 
 #### Download test gives very low result
-Are garbage.php and empty.php (or your replacements) reachable?
-Press F12, select network and start the test. Do you see errors? (cancelled requests are not errors)
+Are garbage.php and empty.php (or your replacements) reachable?  
+Press F12, select network and start the test. Do you see errors? (cancelled requests are not errors)  
+If a small download starts, open it in a text editor. Does it say it's missing openssl_random_pseudo_bytes()? In this case, install OpenSSL (this is usually included when you install Apache and PHP on most distros).
 
 #### Upload test is inaccurate, and I see lag spikes
 Check your server's maximum POST size, make sure it's at least 20Mbytes, possibly more
