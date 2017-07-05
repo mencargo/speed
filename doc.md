@@ -251,6 +251,7 @@ w.postMessage('start {"url_dl": "newGarbageURL", "url_ul": "newEmptyURL", "url_p
 * __IE11:__ the upload test is not precise on very fast connections
 * __IE11:__ the upload test may not work over HTTPS
 * __Safari:__ works, but needs more testing and tweaking for very fast connections
+* __Firefox:__ on some Linux systems with hardware acceleration turned off, the page rendering makes the browser lag, reducing the accuracy of the ping/jitter test
 
 ## Making changes
 Since this is an open source project, you can modify it.
