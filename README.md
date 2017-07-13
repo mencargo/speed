@@ -20,6 +20,8 @@ Only modern browsers are supported (IE11, latest Edge, latest Chrome, latest Fir
 * [Debian 9.0 with Apache](https://fdossena.com/?p=speedtest/quickstart_deb.frag)
 * [Windows Server 2016 with IIS](https://fdossena.com/?p=speedtest/quickstart_win.frag)
 
+Also, here's an [example config on Ubuntu 16 LTS](https://github.com/adolfintel/speedtest/issues/50)
+
 ## How to use in your site
 See the examples or doc.md
 
