@@ -1,5 +1,5 @@
 /*
-	HTML5 Speedtest v4.2.7
+	HTML5 Speedtest v4.2.8
 	by Federico Dossena
 	https://github.com/adolfintel/speedtest/
 	GNU LGPLv3 License
@@ -201,7 +201,7 @@ function dlTest (done) {
     }else{
       var speed = totLoaded / (t / 1000.0)
       dlStatus = ((speed * 8 * settings.overheadCompensationFactor)/1048576).toFixed(2) // speed is multiplied by 8 to go from bytes to bits, overhead compensation is applied, then everything is divided by 1048576 to go to megabits/s
-      if ((t / 1000.0) > settings.time_dl || failed) { // test is over, stop streams and timer
+      if (((t / 1000.0) > settings.time_dl && dlStatus > 0) || failed) { // test is over, stop streams and timer
         if (failed || isNaN(dlStatus)) dlStatus = 'Fail'
         clearRequests()
         clearInterval(interval)
@@ -306,7 +306,7 @@ function ulTest (done) {
     }else{
       var speed = totLoaded / (t / 1000.0)
       ulStatus = ((speed * 8 * settings.overheadCompensationFactor)/1048576).toFixed(2) // speed is multiplied by 8 to go from bytes to bits, overhead compensation is applied, then everything is divided by 1048576 to go to megabits/s
-      if ((t / 1000.0) > settings.time_ul || failed) { // test is over, stop streams and timer
+      if (((t / 1000.0) > settings.time_ul && ulStatus > 0) || failed) { // test is over, stop streams and timer
         if (failed || isNaN(ulStatus)) ulStatus = 'Fail'
         clearRequests()
         clearInterval(interval)
