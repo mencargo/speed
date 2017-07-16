@@ -1,7 +1,7 @@
 # HTML5 Speedtest
 
 > by Federico Dossena  
-> Version 4.2.7, June 22 2017  
+> Version 4.2.8, July 16 2017  
 > [https://github.com/adolfintel/speedtest/](https://github.com/adolfintel/speedtest/)
 
 
@@ -130,10 +130,10 @@ w.postMessage('start {"param1": "value1", "param2": "value2", ...}')
 ```
 
 #### Test parameters
-* __time_dl__: How long the download test should be in seconds
+* __time_dl__: How long the download test should be in seconds. The test will continue regardless of this limit if the speed is still 0.00 when the limit is reached.
     * Default: `15`
     * Recommended: `>=5`
-* __time_ul__: How long the upload test should be in seconds
+* __time_ul__: How long the upload test should be in seconds. The test will continue regardless of this limit if the speed is still 0.00 when the limit is reached.
     * Default: `15`
     * Recommended: `>=10`
 * __count_ping__: How many pings to perform in the ping test
