@@ -1,7 +1,7 @@
 # HTML5 Speedtest
 
 > by Federico Dossena  
-> Version 4.2.8, July 16 2017  
+> Version 4.2.9, July 19 2017  
 > [https://github.com/adolfintel/speedtest/](https://github.com/adolfintel/speedtest/)
 
 
@@ -139,17 +139,21 @@ w.postMessage('start {"param1": "value1", "param2": "value2", ...}')
 * __count_ping__: How many pings to perform in the ping test
     * Default: `35`
     * Recommended: `>=20`
-* __url_dl__: path to garbage.php or a large file to use for the download test
+* __url_dl__: path to garbage.php or a large file to use for the download test.
     * Default: `garbage.php`
+    * The string "-1" disables the test
     * __Important:__ path is relative to js file
 * __url_ul__: path to an empty file or empty.php to use for the upload test
     * Default: `empty.php`
+    * The string "-1" disables the test
     * __Important:__ path is relative to js file
 * __url_ping__: path to an empty file or empty.php to use for the ping test
     * Default: `empty.php`
+    * The string "-1" disables the test
     * __Important:__ path is relative to js file
 * __url_getIp__: path to getIP.php or replacement
     * Default: `getIP.php`
+    * The string "-1" disables the test
     * __Important:__ path is relative to js file
 
 #### Advanced test parameters
