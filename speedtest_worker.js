@@ -94,6 +94,7 @@ this.addEventListener('message', function (e) {
           settings.xhr_dlMultistream = 5
         }
       }
+
       if (typeof s.count_ping !== 'undefined') settings.count_ping = s.count_ping // number of pings for ping test
       if (typeof s.xhr_dlMultistream !== 'undefined') settings.xhr_dlMultistream = s.xhr_dlMultistream // number of download streams
       if (typeof s.xhr_ulMultistream !== 'undefined') settings.xhr_ulMultistream = s.xhr_ulMultistream // number of upload streams
@@ -129,6 +130,7 @@ function clearRequests () {
 }
 // gets client's IP using url_getIp, then calls the done function
 function getIp (done) {
+  if (settings.url_getIp == "-1") {done(); return}
   xhr = new XMLHttpRequest()
   xhr.onload = function () {
     clientIp = xhr.responseText
@@ -144,6 +146,7 @@ function getIp (done) {
 var dlCalled = false // used to prevent multiple accidental calls to dlTest
 function dlTest (done) {
   if (dlCalled) return; else dlCalled = true // dlTest already called?
+  if (settings.url_dl == "-1") {done(); return}
   var totLoaded = 0.0, // total number of loaded bytes
     startT = new Date().getTime(), // timestamp when test was started
     graceTimeDone = false, //set to true after the grace time is past
@@ -225,6 +228,7 @@ reqsmall = new Blob(reqsmall)
 var ulCalled = false // used to prevent multiple accidental calls to ulTest
 function ulTest (done) {
   if (ulCalled) return; else ulCalled = true // ulTest already called?
+  if (settings.url_ul == "-1") {done(); return}
   var totLoaded = 0.0, // total number of transmitted bytes
     startT = new Date().getTime(), // timestamp when test was started
     graceTimeDone = false, //set to true after the grace time is past
@@ -319,6 +323,7 @@ function ulTest (done) {
 var ptCalled = false // used to prevent multiple accidental calls to pingTest
 function pingTest (done) {
   if (ptCalled) return; else ptCalled = true // pingTest already called?
+  if (settings.url_ping == "-1") {done(); return}
   var prevT = null // last time a pong was received
   var ping = 0.0 // current ping value
   var jitter = 0.0 // current jitter value
