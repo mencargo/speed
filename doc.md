@@ -1,7 +1,7 @@
 # HTML5 Speedtest
 
 > by Federico Dossena  
-> Version 4.2.9, July 19 2017  
+> Version 4.3, August 24 2017  
 > [https://github.com/adolfintel/speedtest/](https://github.com/adolfintel/speedtest/)
 
 
@@ -35,14 +35,16 @@ To install the test on your server, upload the following files:
 * `garbage.php`
 * `getIP.php`
 * `empty.php`
+* one of the examples
 
-You may also want to upload one of the examples to test it.  
-Later we'll see how to use the test without PHP.
+Later we'll see how to use the test without PHP, and how to configure the telemetry if you want to use it.
 
 __Important:__ keep all the files together; all paths are relative to the js file
 
 
 ## Usage
+You can modify one of the examples or start from scratch. If you are just editing one of the example, skip to the "test parameters" section.
+
 To run the test, you need to do 3 things:
 
 * Create the worker
@@ -246,15 +248,49 @@ You need to start the test with your replacements like this:
 ```js
 w.postMessage('start {"url_dl": "newGarbageURL", "url_ul": "newEmptyURL", "url_ping": "newEmptyURL", "url_getIp": "newIpURL"}')
 ```
+## Telemetry
+Telemetry currently requires PHP and MySQL.  
+To set up the telemetry, we need to do 4 things:
+* copy `telemetry.php`
+* edit `telemetry.php` to add your database access credentials
+* create the database
+* enable telemetry
 
+### Creating the database
+At the moment, only MySQL is supported.  
+Log into your database using phpMyAdmin or a similar software and import `telemetry.sql` into an empty database.  
+If you see a table called `speedtest_users`, empty, you did it right.
+
+### Configuring `telemetry.php`
+Open telemetry.php with notepad or a similar text editor, and insert your database access credentials
+```
+$MySql_username="USERNAME"; //your database username
+$MySql_password="PASSWORD"; //your database password
+$MySql_hostname="DB_HOSTNAME"; //database address, usually localhost\
+$MySql_databasename="DB_NAME"; //the name of the database where you loaded telemetry.sql
+```
+
+### Enabling telemetry
+Edit your test page; where you start the worker, you need to specify the `telemetry_level`.  
+There are 3 levels:
+* `none`: telemetry is disabled (default)
+* `basic`: telemetry collects IP, User Agent, Preferred language, Test results
+* `full`: same as above, but also collects a log (10-150 Kb each, not recommended)
+
+Example:
+```
+w.postMessage('start {"telemetry_level":"basic"}')
+```
+
+Also, see example8_telemetry.html
+
+### See the results
+At the moment there is no front-end to see the telemetry data; you can connect to the database and see the collected results in the `speedtest_users` table.
 
 ## Known bugs and limitations
 * The ping/jitter test is measured by seeing how long it takes for an empty XHR to complete. It is not an acutal ICMP ping
-* __Chrome:__ high CPU usage from XHR requests with very fast connections (like gigabit).
-  For this reason, the test may report inaccurate results if your CPU is too slow. (Does not affect most computers)
-* __IE11:__ the upload test is not precise on very fast connections
+* __IE11, Edge:__ the upload test is not precise on very fast connections
 * __IE11:__ the upload test may not work over HTTPS
-* __Safari:__ works, but needs more testing and tweaking for very fast connections
 * __Firefox:__ on some Linux systems with hardware acceleration turned off, the page rendering makes the browser lag, reducing the accuracy of the ping/jitter test
 
 ## Making changes
