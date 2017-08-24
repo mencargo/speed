@@ -10,9 +10,16 @@ This is a very lightweight Speedtest implemented in Javascript, using XMLHttpReq
 ## Compatibility
 Only modern browsers are supported (IE11, latest Edge, latest Chrome, latest Firefox, latest Safari)
 
+## Features
+* Download
+* Upload
+* Ping
+* Jitter
+* IP Address
+* Telemetry (optional)
+
 ## Requirements
- - A reasonably fast web server. PHP is optional but recommended (see doc.md for details)
- - Some way to generate garbage data (PHP script included, see doc.md for other solutions)
+ - A reasonably fast web server with PHP (see doc.md for details and use without PHP)
  - Your server must accept large POST requests (up to 20 Megabytes), otherwise the upload test will fail
  - It's also better if your server does not use compression, but it's not mandatory
 

@@ -1,5 +1,5 @@
 /*
-	HTML5 Speedtest v4.2.8
+	HTML5 Speedtest v4.3
 	by Federico Dossena
 	https://github.com/adolfintel/speedtest/
 	GNU LGPLv3 License
@@ -12,6 +12,10 @@ var ulStatus = '' // upload speed in megabit/s with 2 decimal digits
 var pingStatus = '' // ping in milliseconds with 2 decimal digits
 var jitterStatus = '' // jitter in milliseconds with 2 decimal digits
 var clientIp = '' // client's IP address as reported by getIP.php
+
+var log="" //telemetry log
+function tlog(s){log+=Date.now()+": "+s+"\n"}
+function twarn(s){log+=Date.now()+" WARN: "+s+"\n"; console.warn(s);}
 
 // test settings. can be overridden by sending specific values with the start command
 var settings = {
@@ -30,7 +34,9 @@ var settings = {
   xhr_dlUseBlob: false, // if set to true, it reduces ram usage but uses the hard drive (useful with large garbagePhp_chunkSize and/or high xhr_dlMultistream)
   garbagePhp_chunkSize: 20, // size of chunks sent by garbage.php (can be different if enable_quirks is active)
   enable_quirks: true, // enable quirks for specific browsers. currently it overrides settings to optimize for specific browsers, unless they are already being overridden with the start command
-  overheadCompensationFactor: 1048576/925000 //compensation for HTTP+TCP+IP+ETH overhead. 925000 is how much data is actually carried over 1048576 (1mb) bytes downloaded/uploaded. This default value assumes HTTP+TCP+IPv4+ETH with typical MTUs over the Internet. You may want to change this if you're going through your local network with a different MTU or if you're going over IPv6 (see doc.md for some other values)
+  overheadCompensationFactor: 1048576/925000, //compensation for HTTP+TCP+IP+ETH overhead. 925000 is how much data is actually carried over 1048576 (1mb) bytes downloaded/uploaded. This default value assumes HTTP+TCP+IPv4+ETH with typical MTUs over the Internet. You may want to change this if you're going through your local network with a different MTU or if you're going over IPv6 (see doc.md for some other values)
+  telemetry_level: 0, // 0=disabled, 1=basic (results only), 2=full (results+log)
+  url_telemetry: 'telemetry.php' // path to the script that adds telemetry data to the database
 }
 
 var xhr = null // array of currently active xhr requests
@@ -88,13 +94,13 @@ this.addEventListener('message', function (e) {
         if (/Edge.(\d+\.\d+)/i.test(ua)) {
           // edge more precise with 3 download streams
           settings.xhr_dlMultistream = 3
+          settings.forceIE11Workaround = true //Edge 15 introduced a bug that causes onprogress events to not get fired, so for Edge, we have to use the "small chunks" workaround that reduces accuracy
         }
         if (/Chrome.(\d+)/i.test(ua) && (!!self.fetch)) {
           // chrome more precise with 5 streams
           settings.xhr_dlMultistream = 5
         }
       }
-
       if (typeof s.count_ping !== 'undefined') settings.count_ping = s.count_ping // number of pings for ping test
       if (typeof s.xhr_dlMultistream !== 'undefined') settings.xhr_dlMultistream = s.xhr_dlMultistream // number of download streams
       if (typeof s.xhr_ulMultistream !== 'undefined') settings.xhr_ulMultistream = s.xhr_ulMultistream // number of upload streams
@@ -104,19 +110,24 @@ this.addEventListener('message', function (e) {
       if (typeof s.time_dlGraceTime !== 'undefined') settings.time_dlGraceTime = s.time_dlGraceTime // dl test grace time before measuring
       if (typeof s.time_ulGraceTime !== 'undefined') settings.time_ulGraceTime = s.time_ulGraceTime // ul test grace time before measuring
       if (typeof s.overheadCompensationFactor !== 'undefined') settings.overheadCompensationFactor = s.overheadCompensationFactor //custom overhead compensation factor (default assumes HTTP+TCP+IP+ETH with typical MTUs)
-    } catch (e) { console.warn("Possible error in custom test settings. Some settings may not be applied. Exception: "+e) }
+	  if (typeof s.telemetry_level !== 'undefined') settings.telemetry_level = s.telemetry_level === "basic" ? 1 : s.telemetry_level === "full" ? 2 : 0; // telemetry level
+      if (typeof s.url_telemetry !== 'undefined') settings.url_telemetry = s.url_telemetry // url to telemetry.php
+    } catch (e) { twarn("Possible error in custom test settings. Some settings may not be applied. Exception: "+e) }
     // run the tests
-    console.log(settings)
-    getIp(function () { dlTest(function () { testStatus = 2; pingTest(function () { testStatus = 3; ulTest(function () { testStatus = 4 }) }) }) })
+    tlog(JSON.stringify(settings))
+    getIp(function () { dlTest(function () { testStatus = 2; pingTest(function () { testStatus = 3; ulTest(function () { testStatus = 4; sendTelemetry() }) }) }) })
   }
   if (params[0] === 'abort') { // abort command
+    tlog("manually aborted");
     clearRequests() // stop all xhr activity
     if (interval) clearInterval(interval) // clear timer if present
-    testStatus = 5; dlStatus = ''; ulStatus = ''; pingStatus = ''; jitterStatus = '' // set test as aborted
+    if (settings.telemetry_level > 1) sendTelemetry()
+	testStatus = 5; dlStatus = ''; ulStatus = ''; pingStatus = ''; jitterStatus = '' // set test as aborted
   }
 })
 // stops all XHR activity, aggressively
 function clearRequests () {
+  tlog("stopping pending XHRs");
   if (xhr) {
     for (var i = 0; i < xhr.length; i++) {
       if (useFetchAPI) try { xhr[i].cancelRequested = true } catch (e) { }
@@ -130,13 +141,16 @@ function clearRequests () {
 }
 // gets client's IP using url_getIp, then calls the done function
 function getIp (done) {
+  tlog("getIp");
   if (settings.url_getIp == "-1") {done(); return}
   xhr = new XMLHttpRequest()
   xhr.onload = function () {
+	tlog("IP: "+xhr.responseText);
     clientIp = xhr.responseText
     done()
   }
   xhr.onerror = function () {
+	tlog("getIp failed");
     done()
   }
   xhr.open('GET', settings.url_getIp + url_sep(settings.url_getIp) + 'r=' + Math.random(), true)
@@ -145,6 +159,7 @@ function getIp (done) {
 // download test, calls done function when it's over
 var dlCalled = false // used to prevent multiple accidental calls to dlTest
 function dlTest (done) {
+  tlog("dlTest")
   if (dlCalled) return; else dlCalled = true // dlTest already called?
   if (settings.url_dl == "-1") {done(); return}
   var totLoaded = 0.0, // total number of loaded bytes
@@ -156,10 +171,12 @@ function dlTest (done) {
   var testStream = function (i, delay) {
     setTimeout(function () {
       if (testStatus !== 1) return // delayed stream ended up starting after the end of the download test
+	  tlog("dl test stream started "+i+" "+delay)
       var prevLoaded = 0 // number of bytes loaded last time onprogress was called
       var x = new XMLHttpRequest()
       xhr[i] = x
       xhr[i].onprogress = function (event) {
+		tlog("dl stream progress event "+i+" "+event.loaded);
         if (testStatus !== 1) { try { x.abort() } catch (e) { } } // just in case this XHR is still running after the download test
         // progress event, add number of new loaded bytes to totLoaded
         var loadDiff = event.loaded <= 0 ? 0 : (event.loaded - prevLoaded)
@@ -169,11 +186,13 @@ function dlTest (done) {
       }.bind(this)
       xhr[i].onload = function () {
         // the large file has been loaded entirely, start again
+		tlog("dl stream finished "+i)
         try { xhr[i].abort() } catch (e) { } // reset the stream data to empty ram
         testStream(i, 0)
       }.bind(this)
       xhr[i].onerror = function () {
         // error
+		tlog("dl stream failed "+i);
         if (settings.xhr_ignoreErrors === 0) failed=true //abort
         try { xhr[i].abort() } catch (e) { }
         delete (xhr[i])
@@ -191,6 +210,7 @@ function dlTest (done) {
   }
   // every 200ms, update dlStatus
   interval = setInterval(function () {
+	tlog("DL: "+dlStatus+(graceTimeDone?"":" (in grace time)"))
     var t = new Date().getTime() - startT
     if (t < 200) return
     if (!graceTimeDone){
@@ -208,6 +228,7 @@ function dlTest (done) {
         if (failed || isNaN(dlStatus)) dlStatus = 'Fail'
         clearRequests()
         clearInterval(interval)
+		tlog("dlTest finished "+dlStatus)
         done()
       }
     }
@@ -227,6 +248,7 @@ reqsmall.push(r)
 reqsmall = new Blob(reqsmall)
 var ulCalled = false // used to prevent multiple accidental calls to ulTest
 function ulTest (done) {
+  tlog("ulTest");
   if (ulCalled) return; else ulCalled = true // ulTest already called?
   if (settings.url_ul == "-1") {done(); return}
   var totLoaded = 0.0, // total number of transmitted bytes
@@ -238,24 +260,29 @@ function ulTest (done) {
   var testStream = function (i, delay) {
     setTimeout(function () {
       if (testStatus !== 3) return // delayed stream ended up starting after the end of the upload test
+	  tlog("ul test stream started "+i+" "+delay)
       var prevLoaded = 0 // number of bytes transmitted last time onprogress was called
       var x = new XMLHttpRequest()
       xhr[i] = x
       var ie11workaround
-      try {
-        xhr[i].upload.onprogress
-        ie11workaround = false
-      } catch (e) {
-        ie11workaround = true
+      if (settings.forceIE11Workaround) ie11workaround = true; else {
+        try {
+          xhr[i].upload.onprogress
+          ie11workaround = false
+        } catch (e) {
+          ie11workaround = true
+        }
       }
       if (ie11workaround) {
         // IE11 workarond: xhr.upload does not work properly, therefore we send a bunch of small 256k requests and use the onload event as progress. This is not precise, especially on fast connections
         xhr[i].onload = function () {
+		  tlog("ul stream progress event (ie11wa)")
           totLoaded += 262144
           testStream(i, 0)
         }
         xhr[i].onerror = function () {
           // error, abort
+		  tlog("ul stream failed (ie11wa)")
           if (settings.xhr_ignoreErrors === 0) failed = true //abort
           try { xhr[i].abort() } catch (e) { }
           delete (xhr[i])
@@ -267,6 +294,7 @@ function ulTest (done) {
       } else {
         // REGULAR version, no workaround
         xhr[i].upload.onprogress = function (event) {
+		  tlog("ul stream progress event "+i+" "+event.loaded);
           if (testStatus !== 3) { try { x.abort() } catch (e) { } } // just in case this XHR is still running after the upload test
           // progress event, add number of new loaded bytes to totLoaded
           var loadDiff = event.loaded <= 0 ? 0 : (event.loaded - prevLoaded)
@@ -276,9 +304,11 @@ function ulTest (done) {
         }.bind(this)
         xhr[i].upload.onload = function () {
           // this stream sent all the garbage data, start again
+		  tlog("ul stream finished "+i);
           testStream(i, 0)
         }.bind(this)
         xhr[i].upload.onerror = function () {
+		  tlog("ul stream failed "+i);
           if (settings.xhr_ignoreErrors === 0) failed=true //abort
           try { xhr[i].abort() } catch (e) { }
           delete (xhr[i])
@@ -297,6 +327,7 @@ function ulTest (done) {
   }
   // every 200ms, update ulStatus
   interval = setInterval(function () {
+	tlog("UL: "+ulStatus+(graceTimeDone?"":" (in grace time)"))
     var t = new Date().getTime() - startT
     if (t < 200) return
     if (!graceTimeDone){
@@ -314,6 +345,7 @@ function ulTest (done) {
         if (failed || isNaN(ulStatus)) ulStatus = 'Fail'
         clearRequests()
         clearInterval(interval)
+		tlog("ulTest finished "+ulStatus)
         done()
       }
     }
@@ -322,6 +354,7 @@ function ulTest (done) {
 // ping+jitter test, function done is called when it's over
 var ptCalled = false // used to prevent multiple accidental calls to pingTest
 function pingTest (done) {
+  tlog("pingTest");
   if (ptCalled) return; else ptCalled = true // pingTest already called?
   if (settings.url_ping == "-1") {done(); return}
   var prevT = null // last time a pong was received
@@ -332,10 +365,12 @@ function pingTest (done) {
   xhr = []
   // ping function
   var doPing = function () {
+	tlog("ping");
     prevT = new Date().getTime()
     xhr[0] = new XMLHttpRequest()
     xhr[0].onload = function () {
       // pong
+	  tlog("pong");
       if (i === 0) {
         prevT = new Date().getTime() // first pong
       } else {
@@ -350,10 +385,12 @@ function pingTest (done) {
       pingStatus = ping.toFixed(2)
       jitterStatus = jitter.toFixed(2)
       i++
+	  tlog("PING: "+pingStatus+" JITTER: "+jitterStatus)
       if (i < settings.count_ping) doPing(); else done() // more pings to do?
     }.bind(this)
     xhr[0].onerror = function () {
       // a ping failed, cancel test
+	  tlog("ping failed");
       if (settings.xhr_ignoreErrors === 0) { //abort
         pingStatus = 'Fail'
         jitterStatus = 'Fail'
@@ -361,7 +398,6 @@ function pingTest (done) {
         done()
       }
       if (settings.xhr_ignoreErrors === 1) doPing() //retry ping
-
       if (settings.xhr_ignoreErrors === 2){ //ignore failed ping
         i++
         if (i < settings.count_ping) doPing(); else done() // more pings to do?
@@ -372,4 +408,27 @@ function pingTest (done) {
     xhr[0].send()
   }.bind(this)
   doPing() // start first ping
+}
+// telemetry
+function sendTelemetry(){
+  if (settings.telemetry_level < 1) return
+  xhr = new XMLHttpRequest();
+  xhr.onload = function () { console.log("TELEMETRY OL "+xhr.responseText) }
+  xhr.onerror = function () { console.log("TELEMETRY ERROR "+xhr) }
+  xhr.open('POST', settings.url_telemetry+"?r="+Math.random(), true);
+  try{
+    var fd = new FormData()
+    fd.append('dl', dlStatus)
+    fd.append('ul', ulStatus)
+    fd.append('ping', pingStatus)
+    fd.append('jitter', jitterStatus)
+    fd.append('log', settings.telemetry_level>1?log:"")
+    xhr.send(fd)
+  }catch(ex){
+    var postData = "dl="+encodeURIComponent(dlStatus)+"&ul="+encodeURIComponent(ulStatus)+"&ping="+encodeURIComponent(pingStatus)+"&jitter="+encodeURIComponent(jitterStatus)+"&log="+encodeURIComponent(settings.telemetry_level>1?log:"")
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
+    xhr.send(postData)
+  }
+
+
 }
