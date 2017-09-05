@@ -1,7 +1,7 @@
 # HTML5 Speedtest
 
 > by Federico Dossena  
-> Version 4.3.2, September 5 2017
+> Version 4.3.1, August 25 2017  
 > [https://github.com/adolfintel/speedtest/](https://github.com/adolfintel/speedtest/)
 
 
@@ -249,23 +249,21 @@ You need to start the test with your replacements like this:
 w.postMessage('start {"url_dl": "newGarbageURL", "url_ul": "newEmptyURL", "url_ping": "newEmptyURL", "url_getIp": "newIpURL"}')
 ```
 ## Telemetry
-Telemetry currently requires PHP and either MySQL or SQLite.  
+Telemetry currently requires PHP and MySQL.  
 To set up the telemetry, we need to do 4 things:
 * copy `telemetry.php`
-* edit `telemetry.php` to add your database settings
+* edit `telemetry.php` to add your database access credentials
 * create the database
 * enable telemetry
 
 ### Creating the database
-This step is only for MySQL. Skip this if you want to use SQLite.
+At the moment, only MySQL is supported.  
 Log into your database using phpMyAdmin or a similar software and import `telemetry.sql` into an empty database.  
 If you see a table called `speedtest_users`, empty, you did it right.
 
 ### Configuring `telemetry.php`
-Open telemetry.php with notepad or a similar text editor.  
-Set your preferred database, ``$db_type="mysql";`` or ``$db_type="sqlite";``  
-If you choose to use MySQL, you must also add your database credentials:
-```php
+Open telemetry.php with notepad or a similar text editor, and insert your database access credentials
+```
 $MySql_username="USERNAME"; //your database username
 $MySql_password="PASSWORD"; //your database password
 $MySql_hostname="DB_HOSTNAME"; //database address, usually localhost\
@@ -280,7 +278,7 @@ There are 3 levels:
 * `full`: same as above, but also collects a log (10-150 Kb each, not recommended)
 
 Example:
-```js
+```
 w.postMessage('start {"telemetry_level":"basic"}')
 ```
 
