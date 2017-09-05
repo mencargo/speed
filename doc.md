@@ -164,7 +164,7 @@ w.postMessage('start {"param1": "value1", "param2": "value2", ...}')
 * __garbagePhp_chunkSize__: size of chunks sent by garbage.php in megabytes
     * Default: `20`
     * Recommended: `>=10`
-    * Default override: 5 on Safari if enable_quirks is true
+    * Maximum: `100`
 * __xhr_dlMultistream__: how many streams should be opened for the download test
     * Default: `10`
     * Recommended: `>=3`
