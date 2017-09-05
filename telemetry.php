@@ -1,5 +1,5 @@
 <?php
-$db_type="sqlite"; //Type db mysql or sqlite
+$db_type="mysql"; //Type db mysql or sqlite
 
 $ip=($_SERVER['REMOTE_ADDR']);
 $ua=($_SERVER['HTTP_USER_AGENT']);
