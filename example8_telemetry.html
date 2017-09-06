@@ -68,7 +68,7 @@
         function startTest() {
             document.getElementById('st-start').hidden = true
             document.getElementById('st-stop').hidden = false
-            worker = new Worker('speedtest_worker.js')
+            worker = new Worker('speedtest_worker.min.js')
             var interval = setInterval(function () { worker.postMessage('status') }, 100)
             worker.onmessage = function (event) {
                 var download = document.getElementById('st-download')
