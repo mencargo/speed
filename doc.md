@@ -1,7 +1,7 @@
 # HTML5 Speedtest
 
 > by Federico Dossena  
-> Version 4.3.2, September 5 2017
+> Version 4.3.2 Hotfix 1, October 12 2017
 > [https://github.com/adolfintel/speedtest/](https://github.com/adolfintel/speedtest/)
 
 
@@ -291,7 +291,7 @@ At the moment there is no front-end to see the telemetry data; you can connect t
 
 ## Known bugs and limitations
 * The ping/jitter test is measured by seeing how long it takes for an empty XHR to complete. It is not an acutal ICMP ping
-* __IE11, Edge 15 (15 only):__ the upload test is not precise, especially on very fast connections
+* __IE11, Edge 15 and 16 (only):__ the upload test is not precise, especially on very fast connections
 * __IE11:__ the upload test may not work over HTTPS
 * __Firefox:__ on some Linux systems with hardware acceleration turned off, the page rendering makes the browser lag, reducing the accuracy of the ping/jitter test
 
