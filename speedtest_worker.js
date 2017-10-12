@@ -1,5 +1,5 @@
 /*
-	HTML5 Speedtest v4.3.2
+	HTML5 Speedtest v4.3.2 Hotfix 1
 	by Federico Dossena
 	https://github.com/adolfintel/speedtest/
 	GNU LGPLv3 License
@@ -86,7 +86,7 @@ this.addEventListener('message', function (e) {
         if (/Edge.(\d+\.\d+)/i.test(ua)) {
           // edge more precise with 3 download streams
           settings.xhr_dlMultistream = 3
-          if (/Edge\/15.(\d+)/i.test(ua)) {
+          if (/Edge\/15.(\d+)/i.test(ua) || /Edge\/16.(\d+)/i.test(ua)) {
             //Edge 15 introduced a bug that causes onprogress events to not get fired, so for Edge 15, we have to use the "small chunks" workaround that reduces accuracy
             settings.forceIE11Workaround = true
           }
