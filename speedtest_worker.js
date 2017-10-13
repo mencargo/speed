@@ -1,5 +1,5 @@
 /*
-	HTML5 Speedtest v4.3.2 Hotfix 1
+	HTML5 Speedtest v4.4
 	by Federico Dossena
 	https://github.com/adolfintel/speedtest/
 	GNU LGPLv3 License
@@ -19,6 +19,7 @@ function twarn(s){log+=Date.now()+' WARN: '+s+'\n'; console.warn(s)}
 
 // test settings. can be overridden by sending specific values with the start command
 var settings = {
+  test_order: "ID_U_P", //order in which tests will be performed as a string. D=Download, U=Upload, P=Ping+Jitter, I=IP, _=1 second delay
   time_ul: 15, // duration of upload test in seconds
   time_dl: 15, // duration of download test in seconds
   time_ulGraceTime: 3, //time to wait in seconds before actually measuring ul speed (wait for buffers to fill)
@@ -41,6 +42,8 @@ var settings = {
 
 var xhr = null // array of currently active xhr requests
 var interval = null // timer used in tests
+var delayTimer = null // another timer used in test
+var test_pointer = 0 //pointer to the next test to run inside settings.test_order
 
 /*
   this function is used on URLs passed in the settings to determine whether we need a ? or an & as a separator
@@ -69,6 +72,7 @@ this.addEventListener('message', function (e) {
         var ss = e.data.substring(5)
         if (ss) s = JSON.parse(ss)
       }catch(e){ twarn('Error parsing custom settings JSON. Please check your syntax') }
+      if (typeof s.test_order !== 'undefined') settings.test_order = s.test_order.toUpperCase() // test order
       if (typeof s.url_dl !== 'undefined') settings.url_dl = s.url_dl // download url
       if (typeof s.url_ul !== 'undefined') settings.url_ul = s.url_ul // upload url
       if (typeof s.url_ping !== 'undefined') settings.url_ping = s.url_ping // ping url
@@ -110,11 +114,24 @@ this.addEventListener('message', function (e) {
     } catch (e) { twarn('Possible error in custom test settings. Some settings may not be applied. Exception: '+e) }
     // run the tests
     tlog(JSON.stringify(settings))
-    getIp(function () { dlTest(function () { testStatus = 2; pingTest(function () { testStatus = 3; ulTest(function () { testStatus = 4; sendTelemetry() }) }) }) })
+    test_pointer=0;
+    var runNextTest=function(){
+      if(test_pointer>=settings.test_order.length){testStatus=4; sendTelemetry(); return;}
+      switch(settings.test_order.charAt(test_pointer)){
+        case 'I':{test_pointer++; getIp(runNextTest);} break;
+        case 'D':{test_pointer++; testStatus=1; dlTest(runNextTest);} break;
+        case 'U':{test_pointer++; testStatus=3; ulTest(runNextTest);} break;
+        case 'P':{test_pointer++; testStatus=2; pingTest(runNextTest);} break;
+        case '_':{test_pointer++; delayTimer=setTimeout(runNextTest,1000);} break;
+        default: test_pointer++;
+      }
+    }
+    runNextTest()
   }
   if (params[0] === 'abort') { // abort command
     tlog('manually aborted')
     clearRequests() // stop all xhr activity
+    runNextTest=null;
     if (interval) clearInterval(interval) // clear timer if present
     if (settings.telemetry_level > 1) sendTelemetry()
 	testStatus = 5; dlStatus = ''; ulStatus = ''; pingStatus = ''; jitterStatus = '' // set test as aborted
@@ -134,9 +151,10 @@ function clearRequests () {
   }
 }
 // gets client's IP using url_getIp, then calls the done function
+var ipCalled = false // used to prevent multiple accidental calls to getIp
 function getIp (done) {
   tlog('getIp')
-  if (settings.url_getIp == "-1") {done(); return}
+  if (ipCalled) return; else ipCalled = true // getIp already called?
   xhr = new XMLHttpRequest()
   xhr.onload = function () {
 	tlog("IP: "+xhr.responseText)
@@ -155,7 +173,6 @@ var dlCalled = false // used to prevent multiple accidental calls to dlTest
 function dlTest (done) {
   tlog('dlTest')
   if (dlCalled) return; else dlCalled = true // dlTest already called?
-  if (settings.url_dl === '-1') {done(); return}
   var totLoaded = 0.0, // total number of loaded bytes
     startT = new Date().getTime(), // timestamp when test was started
     graceTimeDone = false, //set to true after the grace time is past
@@ -244,7 +261,6 @@ var ulCalled = false // used to prevent multiple accidental calls to ulTest
 function ulTest (done) {
   tlog('ulTest')
   if (ulCalled) return; else ulCalled = true // ulTest already called?
-  if (settings.url_ul === '-1') {done(); return}
   var totLoaded = 0.0, // total number of transmitted bytes
     startT = new Date().getTime(), // timestamp when test was started
     graceTimeDone = false, //set to true after the grace time is past
@@ -339,7 +355,7 @@ function ulTest (done) {
         if (failed || isNaN(ulStatus)) ulStatus = 'Fail'
         clearRequests()
         clearInterval(interval)
-		tlog('ulTest finished '+ulStatus)
+        tlog('ulTest finished '+ulStatus)
         done()
       }
     }
@@ -350,7 +366,6 @@ var ptCalled = false // used to prevent multiple accidental calls to pingTest
 function pingTest (done) {
   tlog('pingTest')
   if (ptCalled) return; else ptCalled = true // pingTest already called?
-  if (settings.url_ping === '-1') {done(); return}
   var prevT = null // last time a pong was received
   var ping = 0.0 // current ping value
   var jitter = 0.0 // current jitter value

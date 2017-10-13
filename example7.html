@@ -102,14 +102,11 @@
             var dl_checkbox = document.getElementById("st-download-checkbox")
             var ul_checkbox = document.getElementById("st-upload-checkbox")
             var ping_checkbox = document.getElementById("st-ping-checkbox")
-            var str_parameters = []
 
-            if (!ip_checkbox.checked) {str_parameters.push('"url_getIp": "-1"')}
-            if (!dl_checkbox.checked) {str_parameters.push('"url_dl": "-1"')}
-            if (!ul_checkbox.checked) {str_parameters.push('"url_ul": "-1"')}
-            if (!ping_checkbox.checked) {str_parameters.push('"url_ping": "-1"')}
+            var test_order=(ip_checkbox.checked?"I":"")+(dl_checkbox.checked?"D":"")+(ul_checkbox.checked?"U":"")+(ping_checkbox.checked?"P":"")
 
-            worker.postMessage('start {' + str_parameters.join(",") + '}')
+            worker.postMessage('start {"test_order":"'+test_order+'" }')
+
         }
         function stopTest() {
             if (worker) worker.postMessage('abort')
