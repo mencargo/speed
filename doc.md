@@ -1,7 +1,7 @@
 # HTML5 Speedtest
 
 > by Federico Dossena  
-> Version 4.3.2 Hotfix 1, October 12 2017
+> Version 4.4, October 14 2017
 > [https://github.com/adolfintel/speedtest/](https://github.com/adolfintel/speedtest/)
 
 
@@ -143,22 +143,26 @@ w.postMessage('start {"param1": "value1", "param2": "value2", ...}')
     * Recommended: `>=20`
 * __url_dl__: path to garbage.php or a large file to use for the download test.
     * Default: `garbage.php`
-    * The string "-1" disables the test
     * __Important:__ path is relative to js file
 * __url_ul__: path to an empty file or empty.php to use for the upload test
     * Default: `empty.php`
-    * The string "-1" disables the test
     * __Important:__ path is relative to js file
 * __url_ping__: path to an empty file or empty.php to use for the ping test
     * Default: `empty.php`
-    * The string "-1" disables the test
     * __Important:__ path is relative to js file
 * __url_getIp__: path to getIP.php or replacement
     * Default: `getIP.php`
-    * The string "-1" disables the test
     * __Important:__ path is relative to js file
 
 #### Advanced test parameters
+* __test_order__: the order in which tests will be performed. Each character represents an operation:
+    * `I`: get IP
+    * `D`: download test
+    * `U`: upload test
+    * `P`: ping + jitter test
+    * `_`: delay 1 second
+    * Default test order: `ID_U_P`
+    * __Important:__ Tests can only be run once
 * __enable_quirks__: enables browser-specific optimizations. These optimizations override some of the default settings. They do not override settings that are explicitly set.
     * Default: `true`
 * __garbagePhp_chunkSize__: size of chunks sent by garbage.php in megabytes
