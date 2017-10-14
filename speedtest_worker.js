@@ -42,7 +42,6 @@ var settings = {
 
 var xhr = null // array of currently active xhr requests
 var interval = null // timer used in tests
-var delayTimer = null // another timer used in test
 var test_pointer = 0 //pointer to the next test to run inside settings.test_order
 
 /*
@@ -121,7 +120,7 @@ this.addEventListener('message', function (e) {
         case 'D':{test_pointer++; testStatus=1; dlTest(runNextTest);} break;
         case 'U':{test_pointer++; testStatus=3; ulTest(runNextTest);} break;
         case 'P':{test_pointer++; testStatus=2; pingTest(runNextTest);} break;
-        case '_':{test_pointer++; delayTimer=setTimeout(runNextTest,1000);} break;
+        case '_':{test_pointer++; setTimeout(runNextTest,1000);} break;
         default: test_pointer++;
       }
     }
