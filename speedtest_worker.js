@@ -72,45 +72,44 @@ this.addEventListener('message', function (e) {
         var ss = e.data.substring(5)
         if (ss) s = JSON.parse(ss)
       }catch(e){ twarn('Error parsing custom settings JSON. Please check your syntax') }
-      if (typeof s.test_order !== 'undefined') settings.test_order = s.test_order.toUpperCase() // test order
-      if (typeof s.url_dl !== 'undefined') settings.url_dl = s.url_dl // download url
-      if (typeof s.url_ul !== 'undefined') settings.url_ul = s.url_ul // upload url
-      if (typeof s.url_ping !== 'undefined') settings.url_ping = s.url_ping // ping url
-      if (typeof s.url_getIp !== 'undefined') settings.url_getIp = s.url_getIp // url to getIP.php
-      if (typeof s.time_dl !== 'undefined') settings.time_dl = s.time_dl // duration of download test
-      if (typeof s.time_ul !== 'undefined') settings.time_ul = s.time_ul // duration of upload test
-      if (typeof s.enable_quirks !== 'undefined') settings.enable_quirks = s.enable_quirks // enable quirks or not
-      // quirks for specific browsers. more may be added in future releases
-      if (settings.enable_quirks) {
+      //copy custom settings
+      for(var key in s){
+        if(typeof settings[key] !== 'undefined') settings[key]=s[key]; else twarn("Unknown setting ignored: "+key);
+      }
+      // quirks for specific browsers. apply only if not overridden. more may be added in future releases
+      if (settings.enable_quirks||(typeof s.enable_quirks !== 'undefined' && s.enable_quirks)) {
         var ua = navigator.userAgent
         if (/Firefox.(\d+\.\d+)/i.test(ua)) {
-          // ff more precise with 1 upload stream
-          settings.xhr_ulMultistream = 1
+          if(typeof s.xhr_ulMultistream === 'undefined'){
+            // ff more precise with 1 upload stream
+            settings.xhr_ulMultistream = 1
+          }
+          if(typeof s.test_order === 'undefined'){
+            // ff more precise if upload test is performed after ping because upload XHRs are not interrupted immediately
+            settings.test_order= 'ID_P_U'
+          }
         }
         if (/Edge.(\d+\.\d+)/i.test(ua)) {
-          // edge more precise with 3 download streams
-          settings.xhr_dlMultistream = 3
+          if(typeof s.xhr_dlMultistream === 'undefined'){
+            // edge more precise with 3 download streams
+            settings.xhr_dlMultistream = 3
+          }
           if (/Edge\/15.(\d+)/i.test(ua) || /Edge\/16.(\d+)/i.test(ua)) {
             //Edge 15 introduced a bug that causes onprogress events to not get fired, so for Edge 15, we have to use the "small chunks" workaround that reduces accuracy
             settings.forceIE11Workaround = true
           }
         }
         if (/Chrome.(\d+)/i.test(ua) && (!!self.fetch)) {
-          // chrome more precise with 5 streams
-          settings.xhr_dlMultistream = 5
+          if(typeof s.xhr_dlMultistream === 'undefined'){
+            // chrome more precise with 5 streams
+            settings.xhr_dlMultistream = 5
+          }
         }
       }
-      if (typeof s.count_ping !== 'undefined') settings.count_ping = s.count_ping // number of pings for ping test
-      if (typeof s.xhr_dlMultistream !== 'undefined') settings.xhr_dlMultistream = s.xhr_dlMultistream // number of download streams
-      if (typeof s.xhr_ulMultistream !== 'undefined') settings.xhr_ulMultistream = s.xhr_ulMultistream // number of upload streams
-      if (typeof s.xhr_ignoreErrors !== 'undefined') settings.xhr_ignoreErrors = s.xhr_ignoreErrors // what to do in case of errors during the test
-      if (typeof s.xhr_dlUseBlob !== 'undefined') settings.xhr_dlUseBlob = s.xhr_dlUseBlob // use blob for download test
-      if (typeof s.garbagePhp_chunkSize !== 'undefined') settings.garbagePhp_chunkSize = s.garbagePhp_chunkSize // size of garbage.php chunks
-      if (typeof s.time_dlGraceTime !== 'undefined') settings.time_dlGraceTime = s.time_dlGraceTime // dl test grace time before measuring
-      if (typeof s.time_ulGraceTime !== 'undefined') settings.time_ulGraceTime = s.time_ulGraceTime // ul test grace time before measuring
-      if (typeof s.overheadCompensationFactor !== 'undefined') settings.overheadCompensationFactor = s.overheadCompensationFactor //custom overhead compensation factor (default assumes HTTP+TCP+IP+ETH with typical MTUs)
-      if (typeof s.telemetry_level !== 'undefined') settings.telemetry_level = s.telemetry_level === 'basic' ? 1 : s.telemetry_level === 'full' ? 2 : 0; // telemetry level
-      if (typeof s.url_telemetry !== 'undefined') settings.url_telemetry = s.url_telemetry // url to telemetry.php
+      //telemetry_level has to be parsed and not just copied
+      if(typeof s.telemetry_level !== 'undefined') settings.telemetry_level = s.telemetry_level === 'basic' ? 1 : s.telemetry_level === 'full' ? 2 : 0; // telemetry level
+      //transform test_order to uppercase, just in case
+      settings.test_order=settings.test_order.toUpperCase();
     } catch (e) { twarn('Possible error in custom test settings. Some settings may not be applied. Exception: '+e) }
     // run the tests
     tlog(JSON.stringify(settings))

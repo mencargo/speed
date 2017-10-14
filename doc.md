@@ -162,6 +162,7 @@ w.postMessage('start {"param1": "value1", "param2": "value2", ...}')
     * `P`: ping + jitter test
     * `_`: delay 1 second
     * Default test order: `ID_U_P`
+    * Default override: `ID_P_U` on Firefox if enable_quirks is true because Firefox does not stop upload XHRs right away, it takes 2-3 seconds.
     * __Important:__ Tests can only be run once
 * __enable_quirks__: enables browser-specific optimizations. These optimizations override some of the default settings. They do not override settings that are explicitly set.
     * Default: `true`
