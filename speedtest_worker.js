@@ -1,5 +1,5 @@
 /*
-	HTML5 Speedtest v4.4
+	HTML5 Speedtest v4.5
 	by Federico Dossena
 	https://github.com/adolfintel/speedtest/
 	GNU LGPLv3 License
@@ -12,6 +12,9 @@ var ulStatus = '' // upload speed in megabit/s with 2 decimal digits
 var pingStatus = '' // ping in milliseconds with 2 decimal digits
 var jitterStatus = '' // jitter in milliseconds with 2 decimal digits
 var clientIp = '' // client's IP address as reported by getIP.php
+var dlProgress = 0 //progress of download test 0-1
+var ulProgress = 0 //progress of upload test 0-1
+var pingProgress = 0 //progress of ping+jitter test 0-1
 
 var log='' //telemetry log
 function tlog(s){log+=Date.now()+': '+s+'\n'}
@@ -35,7 +38,9 @@ var settings = {
   xhr_dlUseBlob: false, // if set to true, it reduces ram usage but uses the hard drive (useful with large garbagePhp_chunkSize and/or high xhr_dlMultistream)
   garbagePhp_chunkSize: 20, // size of chunks sent by garbage.php (can be different if enable_quirks is active)
   enable_quirks: true, // enable quirks for specific browsers. currently it overrides settings to optimize for specific browsers, unless they are already being overridden with the start command
-  overheadCompensationFactor: 1048576/925000, //compensation for HTTP+TCP+IP+ETH overhead. 925000 is how much data is actually carried over 1048576 (1mb) bytes downloaded/uploaded. This default value assumes HTTP+TCP+IPv4+ETH with typical MTUs over the Internet. You may want to change this if you're going through your local network with a different MTU or if you're going over IPv6 (see doc.md for some other values)
+  ping_allowPerformanceApi: true, // if enabled, the ping test will attempt to calculate the ping more precisely using the Performance API. Currently works perfectly in Chrome, badly in Edge, and not at all in Firefox. If Performance API is not supported or the result is obviously wrong, a fallback is provided.
+  overheadCompensationFactor: 1.06, //can be changed to compensatie for transport overhead. (see doc.md for some other values)
+  useMebibits: false, //if set to true, speed will be reported in mebibits/s instead of megabits/s
   telemetry_level: 0, // 0=disabled, 1=basic (results only), 2=full (results+log)
   url_telemetry: 'telemetry.php' // path to the script that adds telemetry data to the database
 }
@@ -52,7 +57,7 @@ function url_sep (url) { return url.match(/\?/) ? '&' : '?'; }
 /*
 	listener for commands from main thread to this worker.
 	commands:
-	-status: returns the current status as a string of values spearated by a semicolon (;) in this order: testStatus;dlStatus;ulStatus;pingStatus;clientIp;jitterStatus
+	-status: returns the current status as a string of values spearated by a semicolon (;) in this order: testStatus;dlStatus;ulStatus;pingStatus;clientIp;jitterStatus;dlProgress;ulProgress;pingProgress
 	-abort: aborts the current test
 	-start: starts the test. optionally, settings can be passed as JSON.
 		example: start {"time_ul":"10", "time_dl":"10", "count_ping":"50"}
@@ -60,7 +65,7 @@ function url_sep (url) { return url.match(/\?/) ? '&' : '?'; }
 this.addEventListener('message', function (e) {
   var params = e.data.split(' ')
   if (params[0] === 'status') { // return status
-    postMessage(testStatus + ';' + dlStatus + ';' + ulStatus + ';' + pingStatus + ';' + clientIp + ';' + jitterStatus)
+    postMessage(testStatus + ';' + dlStatus + ';' + ulStatus + ';' + pingStatus + ';' + clientIp + ';' + jitterStatus + ';' + dlProgress + ';' + ulProgress + ';' + pingProgress)
   }
   if (params[0] === 'start' && testStatus === 0) { // start new test
     testStatus = 1
@@ -93,10 +98,9 @@ this.addEventListener('message', function (e) {
             // edge more precise with 3 download streams
             settings.xhr_dlMultistream = 3
           }
-          if (/Edge\/15.(\d+)/i.test(ua) || /Edge\/16.(\d+)/i.test(ua)) {
-            //Edge 15 introduced a bug that causes onprogress events to not get fired, so for Edge 15, we have to use the "small chunks" workaround that reduces accuracy
-            settings.forceIE11Workaround = true
-          }
+          //Edge 15 introduced a bug that causes onprogress events to not get fired, we have to use the "small chunks" workaround that reduces accuracy
+		  //TODO: MOVE OUT OF QUIRKS!
+          settings.forceIE11Workaround = true
         }
         if (/Chrome.(\d+)/i.test(ua) && (!!self.fetch)) {
           if(typeof s.xhr_dlMultistream === 'undefined'){
@@ -113,13 +117,14 @@ this.addEventListener('message', function (e) {
     // run the tests
     tlog(JSON.stringify(settings))
     test_pointer=0;
+	var iRun=false,dRun=false,uRun=false,pRun=false;
     var runNextTest=function(){
       if(test_pointer>=settings.test_order.length){testStatus=4; sendTelemetry(); return;}
       switch(settings.test_order.charAt(test_pointer)){
-        case 'I':{test_pointer++; getIp(runNextTest);} break;
-        case 'D':{test_pointer++; testStatus=1; dlTest(runNextTest);} break;
-        case 'U':{test_pointer++; testStatus=3; ulTest(runNextTest);} break;
-        case 'P':{test_pointer++; testStatus=2; pingTest(runNextTest);} break;
+        case 'I':{test_pointer++; if(iRun) {runNextTest(); return;} else iRun=true; getIp(runNextTest);} break;
+        case 'D':{test_pointer++; if(dRun) {runNextTest(); return;} else dRun=true;  testStatus=1; dlTest(runNextTest);} break;
+        case 'U':{test_pointer++; if(uRun) {runNextTest(); return;} else uRun=true; testStatus=3; ulTest(runNextTest);} break;
+        case 'P':{test_pointer++; if(pRun) {runNextTest(); return;} else pRun=true; testStatus=2; pingTest(runNextTest);} break;
         case '_':{test_pointer++; setTimeout(runNextTest,1000);} break;
         default: test_pointer++;
       }
@@ -221,6 +226,7 @@ function dlTest (done) {
   interval = setInterval(function () {
     tlog('DL: '+dlStatus+(graceTimeDone?'':' (in grace time)'))
     var t = new Date().getTime() - startT
+	if (graceTimeDone) dlProgress = t / (settings.time_dl * 1000)
     if (t < 200) return
     if (!graceTimeDone){
       if (t > 1000 * settings.time_dlGraceTime){
@@ -232,11 +238,12 @@ function dlTest (done) {
       }
     }else{
       var speed = totLoaded / (t / 1000.0)
-      dlStatus = ((speed * 8 * settings.overheadCompensationFactor)/1048576).toFixed(2) // speed is multiplied by 8 to go from bytes to bits, overhead compensation is applied, then everything is divided by 1048576 to go to megabits/s
+      dlStatus = ((speed * 8 * settings.overheadCompensationFactor)/(settings.useMebibits?1048576:1000000)).toFixed(2) // speed is multiplied by 8 to go from bytes to bits, overhead compensation is applied, then everything is divided by 1048576 or 1000000 to go to megabits/mebibits
       if (((t / 1000.0) > settings.time_dl && dlStatus > 0) || failed) { // test is over, stop streams and timer
         if (failed || isNaN(dlStatus)) dlStatus = 'Fail'
         clearRequests()
         clearInterval(interval)
+		dlProgress = 1
         tlog('dlTest finished '+dlStatus)
         done()
       }
@@ -337,6 +344,7 @@ function ulTest (done) {
   interval = setInterval(function () {
 	tlog('UL: '+ulStatus+(graceTimeDone?'':' (in grace time)'))
     var t = new Date().getTime() - startT
+	if (graceTimeDone) ulProgress = t / (settings.time_ul * 1000)
     if (t < 200) return
     if (!graceTimeDone){
       if (t > 1000 * settings.time_ulGraceTime){
@@ -348,11 +356,12 @@ function ulTest (done) {
       }
     }else{
       var speed = totLoaded / (t / 1000.0)
-      ulStatus = ((speed * 8 * settings.overheadCompensationFactor)/1048576).toFixed(2) // speed is multiplied by 8 to go from bytes to bits, overhead compensation is applied, then everything is divided by 1048576 to go to megabits/s
+      ulStatus = ((speed * 8 * settings.overheadCompensationFactor)/(settings.useMebibits?1048576:1000000)).toFixed(2) // speed is multiplied by 8 to go from bytes to bits, overhead compensation is applied, then everything is divided by 1048576 or 1000000 to go to megabits/mebibits
       if (((t / 1000.0) > settings.time_ul && ulStatus > 0) || failed) { // test is over, stop streams and timer
         if (failed || isNaN(ulStatus)) ulStatus = 'Fail'
         clearRequests()
         clearInterval(interval)
+		ulProgress = 1
         tlog('ulTest finished '+ulStatus)
         done()
       }
@@ -373,6 +382,7 @@ function pingTest (done) {
   // ping function
   var doPing = function () {
     tlog('ping')
+	pingProgress = i / settings.count_ping
     prevT = new Date().getTime()
     xhr[0] = new XMLHttpRequest()
     xhr[0].onload = function () {
@@ -381,7 +391,21 @@ function pingTest (done) {
       if (i === 0) {
         prevT = new Date().getTime() // first pong
       } else {
-        var instspd = (new Date().getTime() - prevT)
+        var instspd = new Date().getTime() - prevT
+		if(settings.ping_allowPerformanceApi){
+			try{
+				//try to get accurate performance timing using performance api
+				var p=performance.getEntries()
+				p=p[p.length-1]
+				var d = p.responseStart - p.requestStart //best precision: chromium-based
+				if (d<=0) d=p.duration //edge: not so good precision because it also considers the overhead and there is no way to avoid it
+				if (d>0&&d<instspd) instspd=d
+			}catch(e){
+				//if not possible, keep the estimate
+				//firefox can't access performance api from worker: worst precision
+				tlog('Performance API not supported, using estimate')
+			}
+		}
         var instjitter = Math.abs(instspd - prevInstspd)
         if (i === 1) ping = instspd; /* first ping, can't tell jitter yet*/ else {
           ping = ping * 0.9 + instspd * 0.1 // ping, weighted average
@@ -393,7 +417,7 @@ function pingTest (done) {
       jitterStatus = jitter.toFixed(2)
       i++
       tlog('PING: '+pingStatus+' JITTER: '+jitterStatus)
-      if (i < settings.count_ping) doPing(); else done() // more pings to do?
+      if (i < settings.count_ping) doPing(); else {pingProgress = 1; done()} // more pings to do?
     }.bind(this)
     xhr[0].onerror = function () {
       // a ping failed, cancel test
