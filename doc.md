@@ -61,7 +61,7 @@ Look for the line that contains `postMessage('start `
 This is where custom parameters can be passed to the test as a JSON string. You can write the string manually or use ``JSON.stringify`` to do that for you.
 Here's an example:
 ```js
-w.postMessage('start {"time_dl":"10"});
+w.postMessage('start {"time_dl":"10"}');
 ```
 This starts the test with default settings, but sets the download test to last only 10 seconds.  
 Here's a cleaner version using ``JSON.stringify``:
