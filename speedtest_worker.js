@@ -6,7 +6,7 @@
 */
 
 // data reported to main thread
-var testStatus = 0 // 0=not started, 1=download test, 2=ping+jitter test, 3=upload test, 4=finished, 5=abort/error
+var testStatus = -1 // -1=not started, 0=starting, 1=download test, 2=ping+jitter test, 3=upload test, 4=finished, 5=abort/error
 var dlStatus = '' // download speed in megabit/s with 2 decimal digits
 var ulStatus = '' // upload speed in megabit/s with 2 decimal digits
 var pingStatus = '' // ping in milliseconds with 2 decimal digits
@@ -34,6 +34,7 @@ var settings = {
   url_getIp: 'getIP.php', // path to getIP.php relative to this js file, or a similar thing that outputs the client's ip
   xhr_dlMultistream: 10, // number of download streams to use (can be different if enable_quirks is active)
   xhr_ulMultistream: 3, // number of upload streams to use (can be different if enable_quirks is active)
+  xhr_multistreamDelay: 300, //how much concurrent requests should be delayed
   xhr_ignoreErrors: 1, // 0=fail on errors, 1=attempt to restart a stream if it fails, 2=ignore all errors
   xhr_dlUseBlob: false, // if set to true, it reduces ram usage but uses the hard drive (useful with large garbagePhp_chunkSize and/or high xhr_dlMultistream)
   garbagePhp_chunkSize: 20, // size of chunks sent by garbage.php (can be different if enable_quirks is active)
@@ -67,8 +68,8 @@ this.addEventListener('message', function (e) {
   if (params[0] === 'status') { // return status
     postMessage(testStatus + ';' + dlStatus + ';' + ulStatus + ';' + pingStatus + ';' + clientIp + ';' + jitterStatus + ';' + dlProgress + ';' + ulProgress + ';' + pingProgress)
   }
-  if (params[0] === 'start' && testStatus === 0) { // start new test
-    testStatus = 1
+  if (params[0] === 'start' && testStatus === -1) { // start new test
+    testStatus = 0
     try {
       // parse settings, if present
       var s = {}
@@ -98,9 +99,6 @@ this.addEventListener('message', function (e) {
             // edge more precise with 3 download streams
             settings.xhr_dlMultistream = 3
           }
-          //Edge 15 introduced a bug that causes onprogress events to not get fired, we have to use the "small chunks" workaround that reduces accuracy
-		  //TODO: MOVE OUT OF QUIRKS!
-          settings.forceIE11Workaround = true
         }
         if (/Chrome.(\d+)/i.test(ua) && (!!self.fetch)) {
           if(typeof s.xhr_dlMultistream === 'undefined'){
@@ -108,6 +106,10 @@ this.addEventListener('message', function (e) {
             settings.xhr_dlMultistream = 5
           }
         }
+      }
+      if (/Edge.(\d+\.\d+)/i.test(ua)) {
+        //Edge 15 introduced a bug that causes onprogress events to not get fired, we have to use the "small chunks" workaround that reduces accuracy
+        settings.forceIE11Workaround = true
       }
       //telemetry_level has to be parsed and not just copied
       if(typeof s.telemetry_level !== 'undefined') settings.telemetry_level = s.telemetry_level === 'basic' ? 1 : s.telemetry_level === 'full' ? 2 : 0; // telemetry level
@@ -210,7 +212,7 @@ function dlTest (done) {
         if (settings.xhr_ignoreErrors === 0) failed=true //abort
         try { xhr[i].abort() } catch (e) { }
         delete (xhr[i])
-        if (settings.xhr_ignoreErrors === 1) testStream(i, 100) //restart stream after 100ms
+        if (settings.xhr_ignoreErrors === 1) testStream(i, 0) //restart stream
       }.bind(this)
       // send xhr
       try { if (settings.xhr_dlUseBlob) xhr[i].responseType = 'blob'; else xhr[i].responseType = 'arraybuffer' } catch (e) { }
@@ -220,7 +222,7 @@ function dlTest (done) {
   }.bind(this)
   // open streams
   for (var i = 0; i < settings.xhr_dlMultistream; i++) {
-    testStream(i, 100 * i)
+    testStream(i, settings.xhr_multistreamDelay * i)
   }
   // every 200ms, update dlStatus
   interval = setInterval(function () {
@@ -256,12 +258,14 @@ var r = new ArrayBuffer(1048576)
 try { r = new Float32Array(r); for (var i = 0; i < r.length; i++)r[i] = Math.random() } catch (e) { }
 var req = []
 var reqsmall = []
+var reqmedium = []
 for (var i = 0; i < 20; i++) req.push(r)
 req = new Blob(req)
 r = new ArrayBuffer(262144)
 try { r = new Float32Array(r); for (var i = 0; i < r.length; i++)r[i] = Math.random() } catch (e) { }
 reqsmall.push(r)
 reqsmall = new Blob(reqsmall)
+
 var ulCalled = false // used to prevent multiple accidental calls to ulTest
 function ulTest (done) {
   tlog('ulTest')
@@ -292,7 +296,7 @@ function ulTest (done) {
         // IE11 workarond: xhr.upload does not work properly, therefore we send a bunch of small 256k requests and use the onload event as progress. This is not precise, especially on fast connections
         xhr[i].onload = function () {
         tlog('ul stream progress event (ie11wa)')
-          totLoaded += 262144
+          totLoaded += reqsmall.size;
           testStream(i, 0)
         }
         xhr[i].onerror = function () {
@@ -301,11 +305,12 @@ function ulTest (done) {
           if (settings.xhr_ignoreErrors === 0) failed = true //abort
           try { xhr[i].abort() } catch (e) { }
           delete (xhr[i])
-          if (settings.xhr_ignoreErrors === 1) testStream(i,100); //restart stream after 100ms
+          if (settings.xhr_ignoreErrors === 1) testStream(i,0); //restart stream
         }
         xhr[i].open('POST', settings.url_ul + url_sep(settings.url_ul) + 'r=' + Math.random(), true) // random string to prevent caching
         xhr[i].setRequestHeader('Content-Encoding', 'identity') // disable compression (some browsers may refuse it, but data is incompressible anyway)
         xhr[i].send(reqsmall)
+        xhr[i].sendT=Date.now()
       } else {
         // REGULAR version, no workaround
         xhr[i].upload.onprogress = function (event) {
@@ -327,7 +332,7 @@ function ulTest (done) {
           if (settings.xhr_ignoreErrors === 0) failed=true //abort
           try { xhr[i].abort() } catch (e) { }
           delete (xhr[i])
-          if (settings.xhr_ignoreErrors === 1) testStream(i, 100) //restart stream after 100ms
+          if (settings.xhr_ignoreErrors === 1) testStream(i, 0) //restart stream
         }.bind(this)
         // send xhr
         xhr[i].open('POST', settings.url_ul + url_sep(settings.url_ul) + 'r=' + Math.random(), true) // random string to prevent caching
@@ -338,7 +343,7 @@ function ulTest (done) {
   }.bind(this)
   // open streams
   for (var i = 0; i < settings.xhr_ulMultistream; i++) {
-    testStream(i, 100 * i)
+    testStream(i, settings.xhr_multistreamDelay * i)
   }
   // every 200ms, update ulStatus
   interval = setInterval(function () {
