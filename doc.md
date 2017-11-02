@@ -127,7 +127,8 @@ format:
 
 `testState;dlStatus;ulStatus;pingStatus;clientIp;jitterStatus;dlProgress;ulProgress;pingProgress`
 
-* __testState__ is an integer 0-5
+* __testState__ is an integer between -1 and 5
+    * `-1` = Test not started yet
     * `0` = Test starting
     * `1` = Download test in progress
     * `2` = Ping + Jitter test in progress

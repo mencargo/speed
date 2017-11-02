@@ -258,7 +258,6 @@ var r = new ArrayBuffer(1048576)
 try { r = new Float32Array(r); for (var i = 0; i < r.length; i++)r[i] = Math.random() } catch (e) { }
 var req = []
 var reqsmall = []
-var reqmedium = []
 for (var i = 0; i < 20; i++) req.push(r)
 req = new Blob(req)
 r = new ArrayBuffer(262144)
@@ -310,7 +309,6 @@ function ulTest (done) {
         xhr[i].open('POST', settings.url_ul + url_sep(settings.url_ul) + 'r=' + Math.random(), true) // random string to prevent caching
         xhr[i].setRequestHeader('Content-Encoding', 'identity') // disable compression (some browsers may refuse it, but data is incompressible anyway)
         xhr[i].send(reqsmall)
-        xhr[i].sendT=Date.now()
       } else {
         // REGULAR version, no workaround
         xhr[i].upload.onprogress = function (event) {
