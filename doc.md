@@ -1,7 +1,7 @@
 # HTML5 Speedtest
 
 > by Federico Dossena  
-> Version 4.5, November 1 2017
+> Version 4.5, November 1, 2017
 > [https://github.com/adolfintel/speedtest/](https://github.com/adolfintel/speedtest/)
 
 
@@ -229,6 +229,9 @@ w.postMessage('start '+JSON.stringify(params))
     * Default: `3`
     * Recommended: `>=1`
     * Default override: 1 on Firefox if enable_quirks is true
+* __xhr_multistreamDelay__: how long should the multiple streams be delayed (in ms)
+    * Default: `300`
+    * Recommended: `>=100`, `<=700`
 * __xhr_ignoreErrors__: how to react to errors in download/upload streams and the ping test
     * `0`: Fail test on error (behaviour of previous versions of this test)
     * `1`: Restart a stream/ping when it fails
