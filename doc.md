@@ -212,9 +212,9 @@ w.postMessage('start '+JSON.stringify(params))
     * `U`: upload test
     * `P`: ping + jitter test
     * `_`: delay 1 second
-    * Default test order: `ID_U_P`
-    * Default override: `ID_P_U` on Firefox if enable_quirks is true because Firefox does not stop upload XHRs right away, it takes 2-3 seconds.
+    * Default test order: `IP_D_U`
     * __Important:__ Tests can only be run once
+    * __Important:__ On Firefox, it is better to run the upload test last
 * __enable_quirks__: enables browser-specific optimizations. These optimizations override some of the default settings. They do not override settings that are explicitly set.
     * Default: `true`
 * __garbagePhp_chunkSize__: size of chunks sent by garbage.php in megabytes
