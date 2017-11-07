@@ -312,7 +312,7 @@ To set up the telemetry, we need to do 4 things:
 * enable telemetry
 
 ### Creating the database
-This step is only for MySQL. Skip this if you want to use SQLite.
+This step is only for MySQL and PostgreSQL. Skip this if you want to use SQLite.
 Log into your database using phpMyAdmin or a similar software and import `telemetry.sql` into an empty database.  
 If you see a table called `speedtest_users`, empty, you did it right.
 
