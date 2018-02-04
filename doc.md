@@ -1,7 +1,7 @@
 # HTML5 Speedtest
 
 > by Federico Dossena  
-> Version 4.5, November 1, 2017
+> Version 4.5.1, February 4, 2017
 > [https://github.com/adolfintel/speedtest/](https://github.com/adolfintel/speedtest/)
 
 
@@ -398,7 +398,7 @@ To create the minified version, use UglifyJS like this:
 uglifyjs -c speedtest_worker.js > speedtest_worker.min.js
 ```
 
-Pull requests are much appreciated. If you don't use github (or git), simply contact me at [dosse91@paranoici.org](mailto:dosse91@paranoici.org).
+Pull requests are very appreciated. If you don't use github (or git), simply contact me at [dosse91@paranoici.org](mailto:dosse91@paranoici.org).
 
 __Important:__ please add your name to modified versions to distinguish them from the main project.
 
