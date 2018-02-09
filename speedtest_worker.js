@@ -1,5 +1,5 @@
 /*
-	HTML5 Speedtest v4.5
+	HTML5 Speedtest v4.5.2
 	by Federico Dossena
 	https://github.com/adolfintel/speedtest/
 	GNU LGPLv3 License
@@ -32,6 +32,7 @@ var settings = {
   url_ul: 'empty.php', // path to an empty file, used for upload test. must be relative to this js file
   url_ping: 'empty.php', // path to an empty file, used for ping test. must be relative to this js file
   url_getIp: 'getIP.php', // path to getIP.php relative to this js file, or a similar thing that outputs the client's ip
+  getIp_ispInfo: true, //if set to true, the server will include ISP info with the IP address
   xhr_dlMultistream: 10, // number of download streams to use (can be different if enable_quirks is active)
   xhr_ulMultistream: 3, // number of upload streams to use (can be different if enable_quirks is active)
   xhr_multistreamDelay: 300, //how much concurrent requests should be delayed
@@ -117,6 +118,7 @@ this.addEventListener('message', function (e) {
     test_pointer=0;
 	var iRun=false,dRun=false,uRun=false,pRun=false;
     var runNextTest=function(){
+      if(testStatus==5) return;
       if(test_pointer>=settings.test_order.length){testStatus=4; sendTelemetry(); return;}
       switch(settings.test_order.charAt(test_pointer)){
         case 'I':{test_pointer++; if(iRun) {runNextTest(); return;} else iRun=true; getIp(runNextTest);} break;
@@ -135,7 +137,7 @@ this.addEventListener('message', function (e) {
     runNextTest=null;
     if (interval) clearInterval(interval) // clear timer if present
     if (settings.telemetry_level > 1) sendTelemetry()
-	testStatus = 5; dlStatus = ''; ulStatus = ''; pingStatus = ''; jitterStatus = '' // set test as aborted
+	  testStatus = 5; dlStatus = ''; ulStatus = ''; pingStatus = ''; jitterStatus = '' // set test as aborted
   }
 })
 // stops all XHR activity, aggressively
@@ -166,7 +168,7 @@ function getIp (done) {
 	tlog('getIp failed')
     done()
   }
-  xhr.open('GET', settings.url_getIp + url_sep(settings.url_getIp) + 'r=' + Math.random(), true)
+  xhr.open('GET', settings.url_getIp + url_sep(settings.url_getIp) + (settings.getIp_ispInfo?"isp=true":"") + 'r=' + Math.random(), true)
   xhr.send()
 }
 // download test, calls done function when it's over
