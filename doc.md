@@ -1,7 +1,7 @@
 # HTML5 Speedtest
 
 > by Federico Dossena  
-> Version 4.5.1, February 4, 2017
+> Version 4.5.2, February 9, 2017
 > [https://github.com/adolfintel/speedtest/](https://github.com/adolfintel/speedtest/)
 
 
@@ -215,6 +215,8 @@ w.postMessage('start '+JSON.stringify(params))
     * Default test order: `IP_D_U`
     * __Important:__ Tests can only be run once
     * __Important:__ On Firefox, it is better to run the upload test last
+* __getIp_ispInfo__: if true, the server will try to get ISP info and pass it along with the IP address. This will add `isp=true` to the request to `url_getIp`. getIP.php accomplishes this using ipinfo.io
+    * Default: `true`
 * __enable_quirks__: enables browser-specific optimizations. These optimizations override some of the default settings. They do not override settings that are explicitly set.
     * Default: `true`
 * __garbagePhp_chunkSize__: size of chunks sent by garbage.php in megabytes
@@ -295,7 +297,8 @@ A symlink to `/dev/urandom` is also ok.
 Your replacement must simply respond with a HTTP code 200 and send nothing else. You may want to send additional headers to disable caching. The test assumes that Connection:keep-alive is sent by the server.
 
 #### Replacement for `getIP.php`
-Your replacement must simply respond with the client's IP as plaintext. Nothing fancy.
+Your replacement must simply respond with the client's IP as plaintext. Nothing fancy.  
+If you want, you can also accept the `isp=true` parameter and also include the ISP info.
 
 #### JS
 You need to start the test with your replacements like this:

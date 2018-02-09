@@ -115,7 +115,8 @@ var w=null; //speedtest worker
 var parameters={ //custom test parameters. See doc.md for a complete list
 	time_dl: 10, //download test lasts 10 seconds
 	time_ul: 10, //upload test lasts 10 seconds
-	count_ping: 20 //ping+jitter test does 20 pings
+	count_ping: 20, //ping+jitter test does 20 pings
+    getIp_ispInfo: false //will only get IP address without ISP info
 };
 function startStop(){
 	if(w!=null){
