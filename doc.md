@@ -1,7 +1,7 @@
 # HTML5 Speedtest
 
 > by Federico Dossena  
-> Version 4.5.2, February 9, 2017
+> Version 4.5.2, February 9, 2018
 > [https://github.com/adolfintel/speedtest/](https://github.com/adolfintel/speedtest/)
 
 
