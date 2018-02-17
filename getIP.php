@@ -10,6 +10,7 @@
     } else {
         $ip=$_SERVER['REMOTE_ADDR'];
     }
+    $ip=preg_replace("/^::ffff:/", "", $ip);
     $isp="";
     if(isset($_GET["isp"])){
         $json = file_get_contents("https://ipinfo.io/".$ip."/json");
