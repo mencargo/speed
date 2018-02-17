@@ -39,7 +39,7 @@ Please see the ```docker``` branch
 If you want to support this project, you can [send a donation via PayPal](https://www.paypal.me/sineisochronic).
 
 ## License
-Copyright (C) 2016-2017 Federico Dossena
+Copyright (C) 2016-2018 Federico Dossena
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
