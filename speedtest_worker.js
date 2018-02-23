@@ -1,5 +1,5 @@
 /*
-	HTML5 Speedtest v4.5.2
+	HTML5 Speedtest v4.5.3
 	by Federico Dossena
 	https://github.com/adolfintel/speedtest/
 	GNU LGPLv3 License
@@ -33,6 +33,7 @@ var settings = {
   url_ping: 'empty.php', // path to an empty file, used for ping test. must be relative to this js file
   url_getIp: 'getIP.php', // path to getIP.php relative to this js file, or a similar thing that outputs the client's ip
   getIp_ispInfo: true, //if set to true, the server will include ISP info with the IP address
+  getIp_ispInfo_distance: 'km', //km or mi=estimate distance from server in km/mi; set to false to disable distance estimation. getIp_ispInfo must be enabled in order for this to work
   xhr_dlMultistream: 10, // number of download streams to use (can be different if enable_quirks is active)
   xhr_ulMultistream: 3, // number of upload streams to use (can be different if enable_quirks is active)
   xhr_multistreamDelay: 300, //how much concurrent requests should be delayed
@@ -168,7 +169,7 @@ function getIp (done) {
 	tlog('getIp failed')
     done()
   }
-  xhr.open('GET', settings.url_getIp + url_sep(settings.url_getIp) + (settings.getIp_ispInfo?"isp=true":"") + 'r=' + Math.random(), true)
+  xhr.open('GET', settings.url_getIp + url_sep(settings.url_getIp) + (settings.getIp_ispInfo?("isp=true"+(settings.getIp_ispInfo_distance?("&distance="+settings.getIp_ispInfo_distance+"&"):"&")):"&") + 'r=' + Math.random(), true)
   xhr.send()
 }
 // download test, calls done function when it's over
