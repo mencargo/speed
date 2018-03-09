@@ -36,7 +36,9 @@ See the examples or doc.md
 Please see the ```docker``` branch
 
 ## Donate
-If you want to support this project, you can [send a donation via PayPal](https://www.paypal.me/sineisochronic).
+If you want to support this project, you can  
+[Send a donation via PayPal](https://www.paypal.me/sineisochronic).  
+Send ETH at this address: 0x8A5273d4e2618c4cff2C62d8EB731701FceEd8E3
 
 ## License
 Copyright (C) 2016-2018 Federico Dossena
