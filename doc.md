@@ -1,7 +1,7 @@
 # HTML5 Speedtest
 
 > by Federico Dossena  
-> Version 4.5.3, February 23, 2018
+> Version 4.5.4, March 21, 2018
 > [https://github.com/adolfintel/speedtest/](https://github.com/adolfintel/speedtest/)
 
 
@@ -237,6 +237,10 @@ w.postMessage('start '+JSON.stringify(params))
     * Default: `3`
     * Recommended: `>=1`
     * Default override: 1 on Firefox if enable_quirks is true
+* __xhr_ul_blob_megabytes__: size in megabytes of the blobs sent during the upload test
+	* Default: `20`
+	* Default override: 4 on Chromium-based mobile browsers (limitation introduced around version 65). This will be forced
+	* Default override: IE11 and Edge currently use a different method for the upload test. This parameter is ignored
 * __xhr_multistreamDelay__: how long should the multiple streams be delayed (in ms)
     * Default: `300`
     * Recommended: `>=100`, `<=700`
