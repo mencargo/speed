@@ -1,0 +1,13 @@
+{
+  "name": "NodeSpeedtest",
+  "version": "1.0.0",
+  "description": "HTML5 Speedtest with NodeJS Backend",
+  "main": "src/Speedtest.js",
+  "repository": "https://github.com/dunklesToast/NodeSpeedtest",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "express": "^4.16.3",
+    "random-bytes": "^1.0.0"
+  }
+}

@@ -21,7 +21,7 @@
     <p id="ping"></p>
 
     <script type="text/javascript">
-        var w = new Worker('speedtest_worker.min.js') // create new worker
+        var w = new Worker('speedtest_worker.js') // create new worker
         setInterval(function () { w.postMessage('status') }, 100) // ask for status every 100ms
         w.onmessage = function (event) { // when status is received, split the string and put the values in the appropriate fields
             var data = event.data.split(';') // string format: status;download;upload;ping (speeds are in mbit/s) (status: 0=not started, 1=downloading, 2=uploading, 3=ping, 4=done, 5=aborted)
