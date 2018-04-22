@@ -55,6 +55,9 @@ $ docker run -d --name  speedtest -p 0.0.0.0:80:80 adolfintel/speedtest:latest
 ```
 
 
+## Node.js backend
+A Node.js implementation is available in the ```node``` branch, maintained by [dunklesToast](https://github.com/dunklesToast).
+
 ## Donate
 If you want to support this project, you can  
 [Send a donation via PayPal](https://www.paypal.me/sineisochronic).  
