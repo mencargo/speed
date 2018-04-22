@@ -31,12 +31,12 @@ Server.get('/garbage', function (req, res) {
     if (cache.size === requestedSize) {
         res.end(cache.random);
     } else {
-        const size = 1048576 * (req.query.ckSize || 100);
+        const size = 1048576 * requestedSize;
         randomBytes(size, (error, bytes) => {
             if (error) res.sendStatus(500);
             else {
                 cache.random = bytes;
-                cache.size = (req.query.ckSize || 100);
+                cache.size = requestedSize;
                 res.end(bytes);
             }
         })

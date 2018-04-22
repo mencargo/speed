@@ -2,9 +2,15 @@
 
 This is a s nodeJS Port from [adolfintel's HTML5 Speedtest](https://github.com/adolfintel/speedtest)
 
+## Installation
+For any instructions and support please check out the [Wiki](https://github.com/adolfintel/speedtest/wiki)
+
 
 ## License
 Copyright (C) 2016-2018 Federico Dossena
+
+Copyright (C) 2018 dunklesToast
+
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
