@@ -31,7 +31,9 @@ Only modern browsers are supported (IE11, latest Edge, latest Chrome, latest Fir
 Also, here's an [example config on Ubuntu 16 LTS](https://github.com/adolfintel/speedtest/issues/50)
 
 ## How to use in your site
-See the examples or doc.md
+* See the examples
+* [Read the wiki](https://github.com/adolfintel/speedtest/wiki)
+* Read doc.md
 
 ## Docker + Docker Compose
 
