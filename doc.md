@@ -316,7 +316,7 @@ You need to start the test with your replacements like this:
 w.postMessage('start {"url_dl": "newGarbageURL", "url_ul": "newEmptyURL", "url_ping": "newEmptyURL", "url_getIp": "newIpURL"}')
 ```
 ## Telemetry
-Telemetry currently requires PHP and either MySQL, PostgreSQL or SQLite.
+Telemetry currently requires PHP and either MySQL, PostgreSQL or SQLite. Alternatively, it is possible to save to a CSV file.
 To set up the telemetry, we need to do 4 things:
 * copy `telemetry.php` and `telemetry_settings.php`
 * edit `telemetry_settings.php` to add your database or CSV settings
@@ -330,7 +330,7 @@ If you see a table called `speedtest_users`, empty, you did it right.
 
 ### Configuring `telemetry.php`
 Open telemetry_settings.php with notepad or a similar text editor.
-Set your preferred database, ``$db_type="mysql";``, ``$db_type="sqlite";`` or ``$db_type="postgresql";``
+Set your preferred database, ``$db_type="mysql";``, ``$db_type="sqlite";``, ``$db_type="postgresql";`` or or ``$db_type="csv";``
 If you choose to use Sqlite3, you must set the path to your database file:
 ```php
 $Sqlite_db_file = "../telemetry.sql";
@@ -352,7 +352,7 @@ $PostgreSql_hostname="DB_HOSTNAME"; //database address, usually localhost
 $PostgreSql_databasename="DB_NAME"; //the name of the database where you loaded telemetry_postgresql.sql
 ```
 
-If you choose to use CSV file, you must set the Csv_File and timezone variables.
+If you choose to use a CSV file, you must set the Csv_File and timezone variables.
 ```php
 $Csv_File="myReportFile.csv";
 $timezone='Europe/Paris';
