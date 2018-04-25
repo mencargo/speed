@@ -416,7 +416,7 @@ To create the minified version, use UglifyJS like this:
 uglifyjs -c speedtest_worker.js > speedtest_worker.min.js
 ```
 
-Pull requests are very appreciated. If you don't use github (or git), simply contact me at [dosse91@paranoici.org](mailto:dosse91@paranoici.org).
+Pull requests are very appreciated. If you don't use github (or git), simply contact me at [info@fdossena.com](mailto:info@fdossena.com).
 
 __Important:__ please add your name to modified versions to distinguish them from the main project.
 
