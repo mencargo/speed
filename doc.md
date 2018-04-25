@@ -1,7 +1,7 @@
 # HTML5 Speedtest
 
 > by Federico Dossena  
-> Version 4.5.4, March 21, 2018
+> Version 4.5.5, April 25, 2018
 > [https://github.com/adolfintel/speedtest/](https://github.com/adolfintel/speedtest/)
 
 
@@ -319,7 +319,7 @@ w.postMessage('start {"url_dl": "newGarbageURL", "url_ul": "newEmptyURL", "url_p
 Telemetry currently requires PHP and either MySQL, PostgreSQL or SQLite.
 To set up the telemetry, we need to do 4 things:
 * copy `telemetry.php` and `telemetry_settings.php`
-* edit `telemetry_settings.php` to add your database settings or the csv filename and date timezone if CSV is used instead of database storage.
+* edit `telemetry_settings.php` to add your database or CSV settings
 * create the database
 * enable telemetry
 
@@ -376,7 +376,7 @@ Also, see example-telemetry.html
 At the moment there is no front-end to see the telemetry data; you can connect to the database and see the collected results in the `speedtest_users` table.
 
 ## Troubleshooting
-These are the most common issues reported by users, and how to fix them. If you still need help, contact me at [dosse91@paranoici.org](mailto:dosse91@paranoici.org).
+These are the most common issues reported by users, and how to fix them. If you still need help, contact me at [info@fdossena.com](mailto:info@fdossena.com).
 
 #### Download test gives very low result
 Are garbage.php and empty.php (or your replacements) reachable?  
@@ -427,4 +427,4 @@ This software is under the GNU LGPL license, Version 3 or newer.
 To put it short: you are free to use, study, modify, and redistribute this software and modified versions of it, for free or for money.
 You can also use it in proprietary software but all changes to this software must remain under the same GNU LGPL license.
 
-Contact me at [dosse91@paranoici.org](mailto:dosse91@paranoici.org) for other licensing models.
+Contact me at [info@fdossena.com](mailto:info@fdossena.com) for other licensing models.
