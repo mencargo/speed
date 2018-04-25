@@ -357,6 +357,7 @@ If you choose to use a CSV file, you must set the Csv_File and timezone variable
 $Csv_File="myReportFile.csv";
 $timezone='Europe/Paris';
 ```
+__Note__: CSV currently only supports basic telemetry, the log will not be saved
 
 ### Enabling telemetry
 Edit your test page; where you start the worker, you need to specify the `telemetry_level`.  
