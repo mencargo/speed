@@ -9,5 +9,9 @@
   "dependencies": {
     "express": "^4.16.3",
     "random-bytes": "^1.0.0"
-  }
+  },
+  "pkg": {
+    "assets": ["src/public/**/*"]
+  },
+  "bin": "src/SpeedTest.js"
 }
