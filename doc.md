@@ -396,6 +396,10 @@ You're running the test on localhost, therefore it is trying to measure the spee
 #### Ping test shows double the actual ping
 Make sure your server is sending the ```Connection:keep-alive``` header
 
+#### The server is behind a load balancer, proxy, etc. and I get the wrong IP address
+Edit getIP.php and replace lines 5-13 with what is more appropriate in your scenario.  
+Example: ```$ip = $_SERVER['HTTP_X_FORWARDED_FOR'];```
+
 ## Known bugs and limitations
 ### General
 * The ping/jitter test is measured by seeing how long it takes for an empty XHR to complete. It is not an acutal ICMP ping. Different browsers may also show different results, especially on very fast connections on slow devices.
