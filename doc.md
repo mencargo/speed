@@ -415,10 +415,10 @@ Since this is an open source project, you can modify it.
 
 To make changes to the speedtest itself, edit `speedtest_worker.js`
 
-To create the minified version, use UglifyJS like this:
+To create the minified version, use [UglifyJS](https://github.com/mishoo/UglifyJS2) like this:
 
 ```
-uglifyjs -c speedtest_worker.js > speedtest_worker.min.js
+uglifyjs -c -o speedtest_worker.min.js -- speedtest_worker.js
 ```
 
 Pull requests are very appreciated. If you don't use github (or git), simply contact me at [info@fdossena.com](mailto:info@fdossena.com).
