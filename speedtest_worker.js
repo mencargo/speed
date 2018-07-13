@@ -1,5 +1,5 @@
 /*
-	HTML5 Speedtest v4.5.4
+	HTML5 Speedtest v4.5.5
 	by Federico Dossena
 	https://github.com/adolfintel/speedtest/
 	GNU LGPLv3 License
@@ -264,13 +264,14 @@ function ulTest (done) {
   if (ulCalled) return; else ulCalled = true // ulTest already called?
 // garbage data for upload test
   var r = new ArrayBuffer(1048576)
-  try { r = new Float32Array(r); for (var i = 0; i < r.length; i++)r[i] = Math.random() } catch (e) { }
+  var maxInt=Math.pow(2,32)-1;
+  try { r = new Uint32Array(r); for (var i = 0; i < r.length; i++)r[i] = Math.random()*maxInt } catch (e) { }
   var req = []
   var reqsmall = []
   for (var i = 0; i < settings.xhr_ul_blob_megabytes; i++) req.push(r)
   req = new Blob(req)
   r = new ArrayBuffer(262144)
-  try { r = new Float32Array(r); for (var i = 0; i < r.length; i++)r[i] = Math.random() } catch (e) { }
+  try { r = new Uint32Array(r); for (var i = 0; i < r.length; i++)r[i] = Math.random()*maxInt } catch (e) { }
   reqsmall.push(r)
   reqsmall = new Blob(reqsmall)
   var totLoaded = 0.0, // total number of transmitted bytes
