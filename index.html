@@ -154,7 +154,7 @@ function startStop(){
 	}else{
 		//test is not running, begin
 		w=new Worker('speedtest_worker.js');
-		w.postMessage('start {"url_dl": "garbage.7z", "url_ul": "empty.txt", "url_ping": "empty.txt", "url_getIp": "http://ip.nubenautas.net/"}')
+		w.postMessage('start {"url_dl": "garbage.7z", "url_ul": "empty", "url_ping": "empty", "url_getIp": "ip"}')
 		I("startStopBtn").className="running";
 		w.onmessage=function(e){
 			var data=e.data.split(';');
