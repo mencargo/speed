@@ -3,7 +3,41 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=no">
-<title>HTML5 Speedtest</title>
+<title>Prueba de conexión a internet</title>
+</head>
+<body>
+<h1>Prueba de conexión a internet</h1>
+<div id="startStopBtn" onclick="startStop()"></div>
+<div id="test">
+	<div class="testGroup">
+		<div class="testArea">
+			<div class="testName">Descarga</div>
+			<div id="dlText" class="meterText"></div>
+			<div class="unit">Mbps</div>
+		</div>
+		<div class="testArea">
+			<div class="testName">Carga</div>
+			<div id="ulText" class="meterText"></div>
+			<div class="unit">Mbps</div>
+		</div>
+	</div>
+	<div class="testGroup">
+		<div class="testArea">
+			<div class="testName">Ping</div>
+			<div id="pingText" class="meterText"></div>
+			<div class="unit">ms</div>
+		</div>
+		<div class="testArea">
+			<div class="testName">Jitter</div>
+			<div id="jitText" class="meterText"></div>
+			<div class="unit">ms</div>
+		</div>
+	</div>
+	<div id="ipArea">
+		IP: <span id="ip"></span>
+	</div>
+</div>
+<p>Servidor en Dallas, Texas, Estados Unidos</p>
 <style type="text/css">
 html,body{
 	border:none; padding:0; margin:0;
@@ -40,10 +74,10 @@ h1{
 	color:#FFFFFF;
 }
 #startStopBtn:before{
-	content:"Start";
+	content:"Iniciar";
 }
 #startStopBtn.running:before{
-	content:"Abort";
+	content:"Cancelar";
 }
 #test{
 	margin-top:2em;
@@ -150,40 +184,7 @@ function initUI(){
 	I("jitText").textContent="";
 	I("ip").textContent="";
 }
+initUI();
 </script>
-</head>
-<body>
-<h1>HTML5 Speedtest</h1>
-<div id="startStopBtn" onclick="startStop()"></div>
-<div id="test">
-	<div class="testGroup">
-		<div class="testArea">
-			<div class="testName">Download</div>
-			<div id="dlText" class="meterText"></div>
-			<div class="unit">Mbps</div>
-		</div>
-		<div class="testArea">
-			<div class="testName">Upload</div>
-			<div id="ulText" class="meterText"></div>
-			<div class="unit">Mbps</div>
-		</div>
-	</div>
-	<div class="testGroup">
-		<div class="testArea">
-			<div class="testName">Ping</div>
-			<div id="pingText" class="meterText"></div>
-			<div class="unit">ms</div>
-		</div>
-		<div class="testArea">
-			<div class="testName">Jitter</div>
-			<div id="jitText" class="meterText"></div>
-			<div class="unit">ms</div>
-		</div>
-	</div>
-	<div id="ipArea">
-		IP Address: <span id="ip"></span>
-	</div>
-</div>
-<script type="text/javascript">initUI();</script>
 </body>
 </html>
