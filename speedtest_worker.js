@@ -174,7 +174,7 @@ function getIp (done) {
 	tlog('getIp failed')
     done()
   }
-  xhr.open('GET', 'http://ip.nubenautas.net/', true)
+  xhr.open('GET', '/ip', true)
   xhr.send()
 }
 // download test, calls done function when it's over
