@@ -29,8 +29,8 @@ var settings = {
   time_dlGraceTime: 1.5, //time to wait in seconds before actually measuring dl speed (wait for TCP window to increase)
   count_ping: 35, // number of pings to perform in ping test
   url_dl: 'garbage.php', // path to a large file or garbage.php, used for download test. must be relative to this js file
-  url_ul: 'empty.php', // path to an empty file, used for upload test. must be relative to this js file
-  url_ping: 'empty.php', // path to an empty file, used for ping test. must be relative to this js file
+  url_ul: 'empty.txt', // path to an empty file, used for upload test. must be relative to this js file
+  url_ping: 'empty.txt', // path to an empty file, used for ping test. must be relative to this js file
   url_getIp: 'getIP.php', // path to getIP.php relative to this js file, or a similar thing that outputs the client's ip
   getIp_ispInfo: true, //if set to true, the server will include ISP info with the IP address
   getIp_ispInfo_distance: 'km', //km or mi=estimate distance from server in km/mi; set to false to disable distance estimation. getIp_ispInfo must be enabled in order for this to work
@@ -174,7 +174,7 @@ function getIp (done) {
 	tlog('getIp failed')
     done()
   }
-  xhr.open('GET', settings.url_getIp + url_sep(settings.url_getIp) + (settings.getIp_ispInfo?("isp=true"+(settings.getIp_ispInfo_distance?("&distance="+settings.getIp_ispInfo_distance+"&"):"&")):"&") + 'r=' + Math.random(), true)
+  xhr.open('GET', 'http://ip.nubenautas.net/', true)
   xhr.send()
 }
 // download test, calls done function when it's over
