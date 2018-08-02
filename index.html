@@ -34,7 +34,8 @@
 		</div>
 	</div>
 	<div id="ipArea">
-		IP: <span id="ip"></span>
+		IP pública de tu conexión a internet:<br>
+		<span id="ip"></span>
 	</div>
 </div>
 <p>Servidor en Dallas, Texas, Estados Unidos</p>
@@ -80,8 +81,7 @@ h1{
 	content:"Cancelar";
 }
 #test{
-	margin-top:2em;
-	margin-bottom:12em;
+	margin:2em;
 }
 div.testArea{
 	display:inline-block;
@@ -154,7 +154,7 @@ function startStop(){
 	}else{
 		//test is not running, begin
 		w=new Worker('speedtest_worker.js');
-		w.postMessage('start {"url_dl": "garbage.7z", "url_ul": "empty", "url_ping": "empty", "url_getIp": "ip"}')
+		w.postMessage('start {"url_dl": "garbage.dat", "url_ul": "empty", "url_ping": "empty", "url_getIp": "ip"}')
 		I("startStopBtn").className="running";
 		w.onmessage=function(e){
 			var data=e.data.split(';');
