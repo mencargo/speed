@@ -64,10 +64,10 @@ this.addEventListener('message', function (e) {
       try{
         var ss = e.data.substring(5)
         if (ss) s = JSON.parse(ss)
-      }catch(e){ twarn('Error parsing custom settings JSON. Please check your syntax') }
+      }catch(e){ console.log('Error parsing custom settings JSON. Please check your syntax') }
       //copy custom settings
       for(var key in s){
-        if(typeof settings[key] !== 'undefined') settings[key]=s[key]; else twarn("Unknown setting ignored: "+key);
+        if(typeof settings[key] !== 'undefined') settings[key]=s[key]; else console.log("Unknown setting ignored: "+key);
       }
       // quirks for specific browsers. apply only if not overridden. more may be added in future releases
       if (settings.enable_quirks||(typeof s.enable_quirks !== 'undefined' && s.enable_quirks)) {
@@ -101,8 +101,9 @@ this.addEventListener('message', function (e) {
 	  }
       //transform test_order to uppercase, just in case
       settings.test_order=settings.test_order.toUpperCase();
-    } catch (e) { twarn('Possible error in custom test settings. Some settings may not be applied. Exception: '+e) }
+    } catch (e) { console.log('Possible error in custom test settings. Some settings may not be applied. Exception: '+e) }
     // run the tests
+    console.log(JSON.stringify(settings))
     test_pointer=0;
 	var iRun=false,dRun=false,uRun=false,pRun=false;
     var runNextTest=function(){
@@ -120,6 +121,7 @@ this.addEventListener('message', function (e) {
     runNextTest()
   }
   if (params[0] === 'abort') { // abort command
+    console.log('manually aborted')
     clearRequests() // stop all xhr activity
     runNextTest=null;
     if (interval) clearInterval(interval) // clear timer if present
@@ -128,6 +130,7 @@ this.addEventListener('message', function (e) {
 })
 // stops all XHR activity, aggressively
 function clearRequests () {
+  console.log('stopping pending XHRs')
   if (xhr) {
     for (var i = 0; i < xhr.length; i++) {
       try { xhr[i].onprogress = null; xhr[i].onload = null; xhr[i].onerror = null } catch (e) { }
@@ -141,16 +144,25 @@ function clearRequests () {
 // gets client's IP using url_getIp, then calls the done function
 var ipCalled = false // used to prevent multiple accidental calls to getIp
 function getIp (done) {
+  console.log('getIp')
   if (ipCalled) return; else ipCalled = true // getIp already called?
   xhr = new XMLHttpRequest()
   xhr.onload = function () {
+	console.log("IP: "+xhr.responseText)
+    clientIp = xhr.responseText
+    done()
+  }
   xhr.onerror = function () {
+	console.log('getIp failed')
+    done()
+  }
   xhr.open('GET', '/ip', true)
   xhr.send()
 }
 // download test, calls done function when it's over
 var dlCalled = false // used to prevent multiple accidental calls to dlTest
 function dlTest (done) {
+  console.log('dlTest')
   if (dlCalled) return; else dlCalled = true // dlTest already called?
   var totLoaded = 0.0, // total number of loaded bytes
     startT = new Date().getTime(), // timestamp when test was started
@@ -161,10 +173,12 @@ function dlTest (done) {
   var testStream = function (i, delay) {
     setTimeout(function () {
       if (testStatus !== 1) return // delayed stream ended up starting after the end of the download test
+      console.log('dl test stream started '+i+' '+delay)
       var prevLoaded = 0 // number of bytes loaded last time onprogress was called
       var x = new XMLHttpRequest()
       xhr[i] = x
       xhr[i].onprogress = function (event) {
+        console.log('dl stream progress event '+i+' '+event.loaded)
         if (testStatus !== 1) { try { x.abort() } catch (e) { } } // just in case this XHR is still running after the download test
         // progress event, add number of new loaded bytes to totLoaded
         var loadDiff = event.loaded <= 0 ? 0 : (event.loaded - prevLoaded)
@@ -174,11 +188,13 @@ function dlTest (done) {
       }.bind(this)
       xhr[i].onload = function () {
         // the large file has been loaded entirely, start again
+        console.log('dl stream finished '+i)
         try { xhr[i].abort() } catch (e) { } // reset the stream data to empty ram
         testStream(i, 0)
       }.bind(this)
       xhr[i].onerror = function () {
         // error
+        console.log('dl stream failed '+i)
         if (settings.xhr_ignoreErrors === 0) failed=true //abort
         try { xhr[i].abort() } catch (e) { }
         delete (xhr[i])
@@ -196,6 +212,7 @@ function dlTest (done) {
   }
   // every 200ms, update dlStatus
   interval = setInterval(function () {
+    console.log('DL: '+dlStatus+(graceTimeDone?'':' (in grace time)'))
     var t = new Date().getTime() - startT
 	if (graceTimeDone) dlProgress = t / (settings.time_dl * 1000)
     if (t < 200) return
@@ -215,6 +232,7 @@ function dlTest (done) {
         clearRequests()
         clearInterval(interval)
 		dlProgress = 1
+        console.log('dlTest finished '+dlStatus)
         done()
       }
     }
@@ -224,6 +242,7 @@ function dlTest (done) {
 
 var ulCalled = false // used to prevent multiple accidental calls to ulTest
 function ulTest (done) {
+  console.log('ulTest')
   if (ulCalled) return; else ulCalled = true // ulTest already called?
 // garbage data for upload test
   var r = new ArrayBuffer(1048576)
@@ -246,6 +265,7 @@ function ulTest (done) {
   var testStream = function (i, delay) {
     setTimeout(function () {
       if (testStatus !== 3) return // delayed stream ended up starting after the end of the upload test
+      console.log('ul test stream started '+i+' '+delay)
       var prevLoaded = 0 // number of bytes transmitted last time onprogress was called
       var x = new XMLHttpRequest()
       xhr[i] = x
@@ -261,11 +281,13 @@ function ulTest (done) {
       if (ie11workaround) {
         // IE11 workarond: xhr.upload does not work properly, therefore we send a bunch of small 256k requests and use the onload event as progress. This is not precise, especially on fast connections
         xhr[i].onload = function () {
+        console.log('ul stream progress event (ie11wa)')
           totLoaded += reqsmall.size;
           testStream(i, 0)
         }
         xhr[i].onerror = function () {
           // error, abort
+          console.log('ul stream failed (ie11wa)')
           if (settings.xhr_ignoreErrors === 0) failed = true //abort
           try { xhr[i].abort() } catch (e) { }
           delete (xhr[i])
@@ -277,6 +299,7 @@ function ulTest (done) {
       } else {
         // REGULAR version, no workaround
         xhr[i].upload.onprogress = function (event) {
+          console.log('ul stream progress event '+i+' '+event.loaded)
           if (testStatus !== 3) { try { x.abort() } catch (e) { } } // just in case this XHR is still running after the upload test
           // progress event, add number of new loaded bytes to totLoaded
           var loadDiff = event.loaded <= 0 ? 0 : (event.loaded - prevLoaded)
@@ -286,9 +309,11 @@ function ulTest (done) {
         }.bind(this)
         xhr[i].upload.onload = function () {
           // this stream sent all the garbage data, start again
+          console.log('ul stream finished '+i)
           testStream(i, 0)
         }.bind(this)
         xhr[i].upload.onerror = function () {
+          console.log('ul stream failed '+i)
           if (settings.xhr_ignoreErrors === 0) failed=true //abort
           try { xhr[i].abort() } catch (e) { }
           delete (xhr[i])
@@ -307,6 +332,7 @@ function ulTest (done) {
   }
   // every 200ms, update ulStatus
   interval = setInterval(function () {
+	console.log('UL: '+ulStatus+(graceTimeDone?'':' (in grace time)'))
     var t = new Date().getTime() - startT
 	if (graceTimeDone) ulProgress = t / (settings.time_ul * 1000)
     if (t < 200) return
@@ -326,6 +352,7 @@ function ulTest (done) {
         clearRequests()
         clearInterval(interval)
 		ulProgress = 1
+        console.log('ulTest finished '+ulStatus)
         done()
       }
     }
@@ -334,6 +361,7 @@ function ulTest (done) {
 // ping+jitter test, function done is called when it's over
 var ptCalled = false // used to prevent multiple accidental calls to pingTest
 function pingTest (done) {
+  console.log('pingTest')
   if (ptCalled) return; else ptCalled = true // pingTest already called?
   var prevT = null // last time a pong was received
   var ping = 0.0 // current ping value
@@ -343,11 +371,13 @@ function pingTest (done) {
   xhr = []
   // ping function
   var doPing = function () {
+    console.log('ping')
 	pingProgress = i / settings.count_ping
     prevT = new Date().getTime()
     xhr[0] = new XMLHttpRequest()
     xhr[0].onload = function () {
       // pong
+      console.log('pong')
       if (i === 0) {
         prevT = new Date().getTime() // first pong
       } else {
@@ -363,6 +393,7 @@ function pingTest (done) {
 			}catch(e){
 				//if not possible, keep the estimate
 				//firefox can't access performance api from worker: worst precision
+				console.log('Performance API not supported, using estimate')
 			}
 		}
         var instjitter = Math.abs(instspd - prevInstspd)
@@ -375,10 +406,12 @@ function pingTest (done) {
       pingStatus = ping.toFixed(2)
       jitterStatus = jitter.toFixed(2)
       i++
+      console.log('PING: '+pingStatus+' JITTER: '+jitterStatus)
       if (i < settings.count_ping) doPing(); else {pingProgress = 1; done()} // more pings to do?
     }.bind(this)
     xhr[0].onerror = function () {
       // a ping failed, cancel test
+      console.log('ping failed')
       if (settings.xhr_ignoreErrors === 0) { //abort
         pingStatus = 'Fail'
         jitterStatus = 'Fail'
