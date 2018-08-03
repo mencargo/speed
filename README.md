@@ -22,7 +22,7 @@ Only modern browsers are supported (IE11, latest Edge, latest Chrome, latest Fir
  - It's also better if your server does not use compression, but it's not mandatory
 
 ## Nginx config example:
-``
+```
   server {
     listen 80;
     server_name speed.nubenautas.net;
@@ -41,10 +41,10 @@ Only modern browsers are supported (IE11, latest Edge, latest Chrome, latest Fir
       return 200;
     }
   }
-``
+```
 
 ## Donate
 [Donate with PayPal](https://www.paypal.me/mencargo)
 
 ## Credits
-Inspired in (https://github.com/adolfintel/speedtest)
+Inspired in https://github.com/adolfintel/speedtest
