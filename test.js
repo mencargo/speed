@@ -111,7 +111,7 @@ this.addEventListener('message', function (e) {
       if(test_pointer>=settings.test_order.length){testStatus=4; return;}
       switch(settings.test_order.charAt(test_pointer)){
         case 'I':{test_pointer++; if(iRun) {runNextTest(); return;} else iRun=true; getIp(runNextTest);} break;
-        case 'D':{test_pointer++; if(dRun) {runNextTest(); return;} else dRun=true;  testStatus=1; dlTest(runNextTest);} break;
+        case 'D':{test_pointer++; if(dRun) {runNextTest(); return;} else dRun=true; testStatus=1; dlTest(runNextTest);} break;
         case 'U':{test_pointer++; if(uRun) {runNextTest(); return;} else uRun=true; testStatus=3; ulTest(runNextTest);} break;
         case 'P':{test_pointer++; if(pRun) {runNextTest(); return;} else pRun=true; testStatus=2; pingTest(runNextTest);} break;
         case '_':{test_pointer++; setTimeout(runNextTest,1000);} break;

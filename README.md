@@ -1,14 +1,9 @@
 # HTML5 Speedtest
 
-No Flash, No Java, No Websocket, No Bullshit.
-
-This is a very lightweight Speedtest implemented in Javascript, using XMLHttpRequest and Web Workers.
-
-## Try it
-[Take a Speedtest](http://speed.nubenautas.net)
+A very lightweight Speedtest implemented in Javascript, using XMLHttpRequest and Web Workers.
 
 ## Compatibility
-Only modern browsers are supported (IE11, latest Edge, latest Chrome, latest Firefox, latest Safari)
+Only modern browsers are supported (IE11, Edge, Chrome, Firefox, Safari)
 
 ## Features
 * Download
