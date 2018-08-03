@@ -173,12 +173,10 @@ function dlTest (done) {
   var testStream = function (i, delay) {
     setTimeout(function () {
       if (testStatus !== 1) return // delayed stream ended up starting after the end of the download test
-      console.log('dl test stream started '+i+' '+delay)
       var prevLoaded = 0 // number of bytes loaded last time onprogress was called
       var x = new XMLHttpRequest()
       xhr[i] = x
       xhr[i].onprogress = function (event) {
-        console.log('dl stream progress event '+i+' '+event.loaded)
         if (testStatus !== 1) { try { x.abort() } catch (e) { } } // just in case this XHR is still running after the download test
         // progress event, add number of new loaded bytes to totLoaded
         var loadDiff = event.loaded <= 0 ? 0 : (event.loaded - prevLoaded)
@@ -212,7 +210,6 @@ function dlTest (done) {
   }
   // every 200ms, update dlStatus
   interval = setInterval(function () {
-    console.log('DL: '+dlStatus+(graceTimeDone?'':' (in grace time)'))
     var t = new Date().getTime() - startT
 	if (graceTimeDone) dlProgress = t / (settings.time_dl * 1000)
     if (t < 200) return
@@ -265,7 +262,6 @@ function ulTest (done) {
   var testStream = function (i, delay) {
     setTimeout(function () {
       if (testStatus !== 3) return // delayed stream ended up starting after the end of the upload test
-      console.log('ul test stream started '+i+' '+delay)
       var prevLoaded = 0 // number of bytes transmitted last time onprogress was called
       var x = new XMLHttpRequest()
       xhr[i] = x
@@ -281,7 +277,6 @@ function ulTest (done) {
       if (ie11workaround) {
         // IE11 workarond: xhr.upload does not work properly, therefore we send a bunch of small 256k requests and use the onload event as progress. This is not precise, especially on fast connections
         xhr[i].onload = function () {
-        console.log('ul stream progress event (ie11wa)')
           totLoaded += reqsmall.size;
           testStream(i, 0)
         }
@@ -299,7 +294,6 @@ function ulTest (done) {
       } else {
         // REGULAR version, no workaround
         xhr[i].upload.onprogress = function (event) {
-          console.log('ul stream progress event '+i+' '+event.loaded)
           if (testStatus !== 3) { try { x.abort() } catch (e) { } } // just in case this XHR is still running after the upload test
           // progress event, add number of new loaded bytes to totLoaded
           var loadDiff = event.loaded <= 0 ? 0 : (event.loaded - prevLoaded)
@@ -332,7 +326,6 @@ function ulTest (done) {
   }
   // every 200ms, update ulStatus
   interval = setInterval(function () {
-	console.log('UL: '+ulStatus+(graceTimeDone?'':' (in grace time)'))
     var t = new Date().getTime() - startT
 	if (graceTimeDone) ulProgress = t / (settings.time_ul * 1000)
     if (t < 200) return
@@ -371,13 +364,11 @@ function pingTest (done) {
   xhr = []
   // ping function
   var doPing = function () {
-    console.log('ping')
 	pingProgress = i / settings.count_ping
     prevT = new Date().getTime()
     xhr[0] = new XMLHttpRequest()
     xhr[0].onload = function () {
       // pong
-      console.log('pong')
       if (i === 0) {
         prevT = new Date().getTime() // first pong
       } else {
@@ -406,7 +397,6 @@ function pingTest (done) {
       pingStatus = ping.toFixed(2)
       jitterStatus = jitter.toFixed(2)
       i++
-      console.log('PING: '+pingStatus+' JITTER: '+jitterStatus)
       if (i < settings.count_ping) doPing(); else {pingProgress = 1; done()} // more pings to do?
     }.bind(this)
     xhr[0].onerror = function () {
